@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="canonical" href="https://weather-source.github.io/dev-toolbox/slug.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="DevToolbox">
+<meta property="og:title" content="Slug Generator — URL-Friendly Slug From Any Title | DevToolbox">
+<meta property="og:description" content="Turn any title into a clean URL slug. Handles accents, punctuation, optional stop-word removal. Free, private, browser-based.">
+<meta property="og:url" content="https://weather-source.github.io/dev-toolbox/slug.html">
+<meta name="twitter:card" content="summary">
+<title>Slug Generator — URL-Friendly Slug From Any Title | DevToolbox</title>
+<meta name="description" content="Turn any title into a clean URL slug. Handles accents, punctuation, optional stop-word removal. Free, private, browser-based.">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="manifest" href="site.webmanifest">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="logo" href="./index.html">Dev<span>Toolbox</span></a>
+  <nav class="main-nav">
+    <a href="cron.html">Cron</a><a href="regex.html">Regex</a><a href="jwt.html">JWT</a>
+    <a href="timestamp.html">Timestamp</a><a href="password.html">Password</a>
+    <a href="image-compressor.html">Image Compress</a><a href="color.html">Color</a>
+    <a href="qrcode.html">QR Code</a><a href="json.html">JSON</a><a href="base64.html">Base64</a>
+    <a href="uuid.html">UUID</a><a href="url-encode.html">URL Encode</a>
+    <a href="diff.html">Diff</a><a href="hash.html">Hash</a><a href="case.html">Case</a>
+    <a href="html-entities.html">HTML Entities</a><a href="markdown.html">Markdown</a><a href="csv-json.html">CSV/JSON</a>
+    <a href="word-count.html">Word Count</a><a href="slug.html">Slug</a><a href="lorem.html">Lorem</a>
+  </nav>
+</header>
+<main>
+  <h1>Slug Generator</h1>
+  <p class="page-desc">Turn any title into a clean, URL-safe slug. Great for blog posts and product URLs. Handles accents, stops common stop-words optionally.</p>
+  <div class="card">
+    <label class="field-label" for="slug-in">Title</label>
+    <input type="text" id="slug-in" placeholder="10 Tips & Tricks for Better URLs!" style="width:100%">
+    <div class="row" style="margin-top:10px">
+      <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="slug-lower" checked> lowercase</label>
+      <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="slug-hyphen" checked> hyphens (not underscores)</label>
+      <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="slug-stop"> remove stop-words (a, the, of…)</label>
+    </div>
+    <label class="field-label" style="margin-top:12px">Slug</label>
+    <div class="output-box" id="slug-out">—</div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn" onclick="navigator.clipboard.writeText(document.getElementById('slug-out').textContent)">Copy</button>
+    </div>
+  </div>
+  <div class="ad-slot"><div>Ad space — reserved</div></div>
+  <div class="support-box">
+    <p>Found this useful? Support DevToolbox:</p>
+    <a href="https://www.buymeacoffee.com/" target="_blank" rel="noopener"><button class="btn success">☕ Buy me a coffee</button></a>
+  </div>
+</main>
+<footer class="site-footer">
+  <div>© 2026 DevToolbox</div>
+  <div><a href="about.html">About</a><a href="privacy.html">Privacy Policy</a><a href="contact.html">Contact</a></div>
+</footer>
+<script>
+const STOPS = new Set(['a','an','the','of','to','in','on','for','and','or','is','are','with']);
+function slugify() {
+  let s = document.getElementById('slug-in').value.normalize('NFKD').replace(/[\u0300-\u036f]/g, '');
+  if (document.getElementById('slug-lower').checked) s = s.toLowerCase();
+  s = s.replace(/[''"]/g, '');
+  if (document.getElementById('slug-stop').checked) s = s.split(/\s+/).filter(w => !STOPS.has(w.toLowerCase())).join(' ');
+  const sep = document.getElementById('slug-hyphen').checked ? '-' : '_';
+  s = s.replace(/[^\w\s-]/g, '').trim().replace(/\s+|_/g, sep).replace(new RegExp(sep + '{2,}', 'g'), sep);
+  document.getElementById('slug-out').textContent = s || '—';
+}
+for (const id of ['slug-in','slug-lower','slug-hyphen','slug-stop']) {
+  document.getElementById(id).addEventListener(id === 'slug-in' ? 'input' : 'change', slugify);
+}
+</script>
+</body>
+</html>

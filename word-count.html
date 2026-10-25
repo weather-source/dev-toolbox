@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="canonical" href="https://weather-source.github.io/dev-toolbox/word-count.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="DevToolbox">
+<meta property="og:title" content="Word Counter — Count Words, Characters, Sentences & Reading Time | DevToolbox">
+<meta property="og:description" content="Free online word counter. Count words, characters (with and without spaces), sentences, paragraphs and reading time instantly, right in your browser.">
+<meta property="og:url" content="https://weather-source.github.io/dev-toolbox/word-count.html">
+<meta name="twitter:card" content="summary">
+<title>Word Counter — Count Words, Characters, Sentences & Reading Time | DevToolbox</title>
+<meta name="description" content="Free online word counter. Count words, characters (with and without spaces), sentences, paragraphs and reading time instantly, right in your browser.">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="manifest" href="site.webmanifest">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="logo" href="./index.html">Dev<span>Toolbox</span></a>
+  <nav class="main-nav">
+    <a href="cron.html">Cron</a><a href="regex.html">Regex</a><a href="jwt.html">JWT</a>
+    <a href="timestamp.html">Timestamp</a><a href="password.html">Password</a>
+    <a href="image-compressor.html">Image Compress</a><a href="color.html">Color</a>
+    <a href="qrcode.html">QR Code</a><a href="json.html">JSON</a><a href="base64.html">Base64</a>
+    <a href="uuid.html">UUID</a><a href="url-encode.html">URL Encode</a>
+    <a href="diff.html">Diff</a><a href="hash.html">Hash</a><a href="case.html">Case</a>
+    <a href="html-entities.html">HTML Entities</a><a href="markdown.html">Markdown</a><a href="csv-json.html">CSV/JSON</a>
+    <a href="word-count.html">Word Count</a><a href="slug.html">Slug</a><a href="lorem.html">Lorem</a>
+  </nav>
+</header>
+<main>
+  <h1>Word Counter</h1>
+  <p class="page-desc">Count words, characters, sentences, paragraphs and estimated reading time in real time. All processing happens locally in your browser.</p>
+  <div class="card">
+    <label class="field-label" for="wc-in">Your text</label>
+    <textarea id="wc-in" style="min-height:220px" placeholder="Paste or type your text here…"></textarea>
+    <div id="wc-stats" class="output-box" style="margin-top:12px">Words: 0 · Characters: 0 · Characters (no spaces): 0 · Sentences: 0 · Paragraphs: 0 · Reading time: 0 min</div>
+  </div>
+  <div class="ad-slot"><div>Ad space — reserved</div></div>
+  <div class="support-box">
+    <p>Found this useful? Support DevToolbox:</p>
+    <a href="https://www.buymeacoffee.com/" target="_blank" rel="noopener"><button class="btn success">☕ Buy me a coffee</button></a>
+  </div>
+</main>
+<footer class="site-footer">
+  <div>© 2026 DevToolbox</div>
+  <div><a href="about.html">About</a><a href="privacy.html">Privacy Policy</a><a href="contact.html">Contact</a></div>
+</footer>
+<script>
+const el = document.getElementById('wc-in');
+function update() {
+  const t = el.value;
+  const words = (t.match(/\S+/g) || []).length;
+  const chars = t.length;
+  const charsNs = t.replace(/\s/g, '').length;
+  const sentences = (t.match(/[.!?]+(?:\s|$)/g) || []).length;
+  const paragraphs = t.split(/\n\s*\n/).filter(p => p.trim()).length;
+  const minutes = Math.max(1, Math.round(words / 200)) || 0;
+  document.getElementById('wc-stats').textContent =
+    `Words: ${words} · Characters: ${chars} · Characters (no spaces): ${charsNs} · Sentences: ${sentences} · Paragraphs: ${paragraphs} · Reading time: ${words ? minutes : 0} min`;
+}
+el.addEventListener('input', update);
+</script>
+</body>
+</html>

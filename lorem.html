@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="canonical" href="https://weather-source.github.io/dev-toolbox/lorem.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="DevToolbox">
+<meta property="og:title" content="Lorem Ipsum Generator — Placeholder Text by Paragraphs, Sentences or Words | DevToolbox">
+<meta property="og:description" content="Generate lorem ipsum placeholder text by paragraphs, sentences or words. One-click copy. Free and fully offline.">
+<meta property="og:url" content="https://weather-source.github.io/dev-toolbox/lorem.html">
+<meta name="twitter:card" content="summary">
+<title>Lorem Ipsum Generator — Placeholder Text by Paragraphs, Sentences or Words | DevToolbox</title>
+<meta name="description" content="Generate lorem ipsum placeholder text by paragraphs, sentences or words. One-click copy. Free and fully offline.">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="manifest" href="site.webmanifest">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="logo" href="./index.html">Dev<span>Toolbox</span></a>
+  <nav class="main-nav">
+    <a href="cron.html">Cron</a><a href="regex.html">Regex</a><a href="jwt.html">JWT</a>
+    <a href="timestamp.html">Timestamp</a><a href="password.html">Password</a>
+    <a href="image-compressor.html">Image Compress</a><a href="color.html">Color</a>
+    <a href="qrcode.html">QR Code</a><a href="json.html">JSON</a><a href="base64.html">Base64</a>
+    <a href="uuid.html">UUID</a><a href="url-encode.html">URL Encode</a>
+    <a href="diff.html">Diff</a><a href="hash.html">Hash</a><a href="case.html">Case</a>
+    <a href="html-entities.html">HTML Entities</a><a href="markdown.html">Markdown</a><a href="csv-json.html">CSV/JSON</a>
+    <a href="word-count.html">Word Count</a><a href="slug.html">Slug</a><a href="lorem.html">Lorem</a>
+  </nav>
+</header>
+<main>
+  <h1>Lorem Ipsum Generator</h1>
+  <p class="page-desc">Generate placeholder text — paragraphs, sentences or words. One click to copy. Runs fully offline.</p>
+  <div class="card">
+    <div class="row">
+      <select id="l-type" class="input"><option value="paragraphs">Paragraphs</option><option value="sentences">Sentences</option><option value="words">Words</option></select>
+      <input type="number" id="l-count" class="input" value="3" min="1" max="50" style="width:90px">
+      <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="l-start" checked> start with "Lorem ipsum dolor sit amet…"</label>
+      <button class="btn" onclick="gen()">Generate</button>
+      <button class="btn secondary" onclick="navigator.clipboard.writeText(document.getElementById('l-out').innerText)">Copy</button>
+    </div>
+    <div id="l-out" class="output-box" style="margin-top:12px;min-height:120px;white-space:pre-wrap"></div>
+  </div>
+  <div class="ad-slot"><div>Ad space — reserved</div></div>
+  <div class="support-box">
+    <p>Found this useful? Support DevToolbox:</p>
+    <a href="https://www.buymeacoffee.com/" target="_blank" rel="noopener"><button class="btn success">☕ Buy me a coffee</button></a>
+  </div>
+</main>
+<footer class="site-footer">
+  <div>© 2026 DevToolbox</div>
+  <div><a href="about.html">About</a><a href="privacy.html">Privacy Policy</a><a href="contact.html">Contact</a></div>
+</footer>
+<script>
+const WORDS = ('lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua enim ad minim veniam quis nostrud exercitation ullamco laboris nisi aliquip ex ea commodo consequat duis aute irure in reprehenderit voluptate velit esse cillum eu fugiat nulla pariatur excepteur sint occaecat cupidatat non proident sunt culpa qui officia deserunt mollit anim id est laborum').split(' ');
+const rnd = n => Math.floor(Math.random() * n);
+function sentence() {
+  const len = 6 + rnd(10);
+  const w = Array.from({length: len}, () => WORDS[rnd(WORDS.length)]);
+  return w[0][0].toUpperCase() + w[0].slice(1) + ' ' + w.slice(1).join(' ') + '.';
+}
+function para() { return Array.from({length: 3 + rnd(4)}, sentence).join(' '); }
+function gen() {
+  const type = document.getElementById('l-type').value;
+  const n = Math.min(50, Math.max(1, +document.getElementById('l-count').value || 1));
+  let out = [];
+  if (type === 'words') {
+    const w = Array.from({length: n}, () => WORDS[rnd(WORDS.length)]);
+    out.push(w.join(' '));
+  } else if (type === 'sentences') {
+    const s = Array.from({length: n}, sentence);
+    if (document.getElementById('l-start').checked) s[0] = 'Lorem ipsum dolor sit amet, ' + s[0].toLowerCase();
+    out.push(s.join(' '));
+  } else {
+    for (let i = 0; i < n; i++) out.push(para());
+    if (document.getElementById('l-start').checked && out.length) out[0] = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. ' + out[0];
+  }
+  document.getElementById('l-out').textContent = out.join('\n\n');
+}
+gen();
+</script>
+</body>
+</html>
