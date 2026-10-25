@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="canonical" href="https://weather-source.github.io/dev-toolbox/uuid.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="DevToolbox">
+<meta property="og:title" content="UUID v4 Generator | DevToolbox">
+<meta property="og:description" content="Generate random UUIDs (GUIDs) in your browser with the Web Crypto API. Batch generation, uppercase and no-dash options.">
+<meta property="og:url" content="https://weather-source.github.io/dev-toolbox/uuid.html">
+<meta name="twitter:card" content="summary">
+<title>UUID v4 Generator | DevToolbox</title>
+<meta name="description" content="Generate random UUIDs (GUIDs) in your browser with the Web Crypto API. Batch generation, uppercase and no-dash options. Free and private.">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="logo" href="./index.html">Dev<span>Toolbox</span></a>
+  <nav class="main-nav">
+    <a href="cron.html">Cron</a><a href="regex.html">Regex</a><a href="jwt.html">JWT</a>
+    <a href="timestamp.html">Timestamp</a><a href="password.html">Password</a>
+    <a href="image-compressor.html">Image Compress</a><a href="color.html">Color</a>
+    <a href="qrcode.html">QR Code</a><a href="json.html">JSON</a>
+    <a href="base64.html">Base64</a><a href="uuid.html">UUID</a><a href="url-encode.html">URL Encode</a>
+  </nav>
+</header>
+<main>
+  <h1>UUID v4 Generator</h1>
+  <p class="page-desc">Cryptographically random UUIDs generated locally with <code>crypto.randomUUID()</code>. Generate a batch, copy all at once.</p>
+
+  <div class="card">
+    <div class="row">
+      <div>
+        <label class="field-label">Count: <span id="uuid-count-val">5</span></label>
+        <input type="range" id="uuid-count" min="1" max="50" value="5" oninput="document.getElementById('uuid-count-val').textContent=this.value;genUuids()">
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap">
+        <div class="checkbox-row"><input type="checkbox" id="uuid-upper" onchange="genUuids()"><label for="uuid-upper">Uppercase</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="uuid-nodash" onchange="genUuids()"><label for="uuid-nodash">No dashes</label></div>
+      </div>
+    </div>
+    <button class="btn" style="margin-top:14px" onclick="genUuids()">↻ Generate</button>
+  </div>
+
+  <div class="card">
+    <label class="field-label">UUIDs <span style="opacity:.6">(click a row to copy it)</span></label>
+    <div id="uuid-list"></div>
+    <button class="btn secondary" style="margin-top:10px" onclick="copyAll(event)">Copy all</button>
+  </div>
+
+  <div class="ad-slot"><div>Ad space — reserved</div></div>
+
+  <div class="support-box">
+    <p>Need IDs? Support DevToolbox:</p>
+    <a href="https://www.buymeacoffee.com/" target="_blank" rel="noopener"><button class="btn success">☕ Buy me a coffee</button></a>
+  </div>
+</main>
+<footer class="site-footer">
+  <div>© 2026 DevToolbox · <a href="uuid.html">UUID generator</a></div>
+  <div><a href="about.html">About</a><a href="privacy.html">Privacy Policy</a><a href="contact.html">Contact</a></div>
+</footer>
+<script>
+let uuids=[];
+function genUuids(){
+  const n=+document.getElementById("uuid-count").value;
+  const upper=document.getElementById("uuid-upper").checked,nodash=document.getElementById("uuid-nodash").checked;
+  uuids=[];
+  for(let i=0;i<n;i++){
+    let u=crypto.randomUUID();
+    if(nodash)u=u.replace(/-/g,"");
+    if(upper)u=u.toUpperCase();
+    uuids.push(u);
+  }
+  document.getElementById("uuid-list").innerHTML=uuids.map(u=>'<div class="kv" style="cursor:pointer" data-u="'+u+'"><span>'+u+'</span><span class="k">copy</span></div>').join("");
+  document.querySelectorAll("#uuid-list .kv").forEach(d=>d.onclick=()=>{navigator.clipboard.writeText(d.dataset.u);d.lastElementChild.textContent="copied ✓";setTimeout(()=>d.lastElementChild.textContent="copy",1000);});
+}
+function copyAll(e){
+  navigator.clipboard.writeText(uuids.join("\n"));
+  e.target.textContent="Copied ✓";setTimeout(()=>e.target.textContent="Copy all",1200);
+}
+genUuids();
+</script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="canonical" href="https://weather-source.github.io/dev-toolbox/url-encode.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="DevToolbox">
+<meta property="og:title" content="URL Encoder / Decoder | DevToolbox">
+<meta property="og:description" content="URL-encode and URL-decode text online. Component and full-URI modes, plus a URL parser showing query parameters.">
+<meta property="og:url" content="https://weather-source.github.io/dev-toolbox/url-encode.html">
+<meta name="twitter:card" content="summary">
+<title>URL Encoder / Decoder | DevToolbox</title>
+<meta name="description" content="URL-encode and URL-decode text online. Component and full-URI modes, plus URL parser showing query parameters. Free and private.">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="logo" href="./index.html">Dev<span>Toolbox</span></a>
+  <nav class="main-nav">
+    <a href="cron.html">Cron</a><a href="regex.html">Regex</a><a href="jwt.html">JWT</a>
+    <a href="timestamp.html">Timestamp</a><a href="password.html">Password</a>
+    <a href="image-compressor.html">Image Compress</a><a href="color.html">Color</a>
+    <a href="qrcode.html">QR Code</a><a href="json.html">JSON</a>
+    <a href="base64.html">Base64</a><a href="uuid.html">UUID</a><a href="url-encode.html">URL Encode</a>
+  </nav>
+</header>
+<main>
+  <h1>URL Encoder / Decoder</h1>
+  <p class="page-desc">Percent-encode or decode text, with a component mode (for query values) and full-URI mode. Includes a URL parser that breaks down query parameters.</p>
+
+  <div class="card">
+    <label class="field-label" for="url-in">Input</label>
+    <textarea id="url-in" placeholder="https://example.com/search?q=hello world&lang=中文"></textarea>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" onclick="enc(true)">Encode (component)</button>
+      <button class="btn" onclick="enc(false)">Encode (full URI)</button>
+      <button class="btn" onclick="dec()">Decode</button>
+      <button class="btn secondary" onclick="parseUrl()">Parse URL →</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <label class="field-label">Result</label>
+    <div class="output-box" id="url-out">—</div>
+    <button class="btn secondary" style="margin-top:10px" onclick="copyRes(event)">Copy</button>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0">URL breakdown</h2>
+    <div id="url-parse"></div>
+  </div>
+
+  <div class="ad-slot"><div>Ad space — reserved</div></div>
+
+  <div class="support-box">
+    <p>Unescaped something tricky? Support DevToolbox:</p>
+    <a href="https://www.buymeacoffee.com/" target="_blank" rel="noopener"><button class="btn success">☕ Buy me a coffee</button></a>
+  </div>
+</main>
+<footer class="site-footer">
+  <div>© 2026 DevToolbox · <a href="url-encode.html">URL encoder</a></div>
+  <div><a href="about.html">About</a><a href="privacy.html">Privacy Policy</a><a href="contact.html">Contact</a></div>
+</footer>
+<script>
+function out(t,ok){const o=document.getElementById("url-out");o.textContent=t;o.className="output-box"+(ok?" ok":" err");}
+function enc(component){
+  const t=document.getElementById("url-in").value;
+  if(!t){out("Enter text first.",false);return;}
+  out(component?encodeURIComponent(t):encodeURI(t),true);
+}
+function dec(){
+  const t=document.getElementById("url-in").value;
+  if(!t){out("Enter encoded text first.",false);return;}
+  try{out(decodeURIComponent(t),true);}catch(e){out("Malformed percent-encoding (check stray % characters).",false);}
+}
+function parseUrl(){
+  const t=document.getElementById("url-in").value.trim();
+  const el=document.getElementById("url-parse");
+  let u;
+  try{u=new URL(t);}catch(e){
+    try{u=new URL("http://placeholder.local"+(t.startsWith("/")?"":"/")+t);}catch(e2){el.innerHTML='<span style="color:var(--danger)">Not a parseable URL.</span>';return;}
+  }
+  const rows=[["Protocol",u.protocol],["Host",u.host||"—"],["Path",u.pathname],["Hash",u.hash||"—"]];
+  let html=rows.map(r=>'<div class="kv"><span class="k">'+r[0]+'</span><span>'+r[1]+'</span></div>').join("");
+  html+='<div style="margin-top:10px;font-size:.85rem;color:var(--text-dim)">Query parameters</div>';
+  const sp=[...u.searchParams.entries()];
+  html+=sp.length?sp.map(([k,v])=>'<div class="kv"><span class="k">'+k+'</span><span>'+v+'</span></div>').join(""):'<div class="copy-hint">none</div>';
+  el.innerHTML=html;
+}
+</script>
+</body>
+</html>

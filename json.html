@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="canonical" href="https://weather-source.github.io/dev-toolbox/json.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="DevToolbox">
+<meta property="og:title" content="JSON Formatter & Validator | DevToolbox">
+<meta property="og:description" content="Format, minify and validate JSON in your browser. Clear error messages with line hints.">
+<meta property="og:url" content="https://weather-source.github.io/dev-toolbox/json.html">
+<meta name="twitter:card" content="summary">
+<title>JSON Formatter & Validator | DevToolbox</title>
+<meta name="description" content="Format, minify and validate JSON in your browser. Clear error messages with line hints. Free and private — nothing is uploaded.">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="logo" href="./index.html">Dev<span>Toolbox</span></a>
+  <nav class="main-nav">
+    <a href="cron.html">Cron</a><a href="regex.html">Regex</a><a href="jwt.html">JWT</a>
+    <a href="timestamp.html">Timestamp</a><a href="password.html">Password</a>
+    <a href="image-compressor.html">Image Compress</a><a href="color.html">Color</a>
+    <a href="qrcode.html">QR Code</a><a href="json.html">JSON</a>
+    <a href="base64.html">Base64</a><a href="uuid.html">UUID</a><a href="url-encode.html">URL Encode</a>
+  </nav>
+</header>
+<main>
+  <h1>JSON Formatter & Validator</h1>
+  <p class="page-desc">Paste JSON to pretty-print, minify, or validate. Errors are reported with position hints. Runs entirely in your browser.</p>
+
+  <div class="card">
+    <label class="field-label" for="json-input">JSON input</label>
+    <textarea id="json-input" style="min-height:200px" placeholder='{"name":"Ada","langs":["js","python"],"active":true}'></textarea>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" onclick="fmt(2)">Format (2-space)</button>
+      <button class="btn" onclick="fmt(4)">Format (4-space)</button>
+      <button class="btn secondary" onclick="minify()">Minify</button>
+      <button class="btn secondary" onclick="sortKeys()">Sort keys</button>
+      <button class="btn secondary" onclick="copy()">Copy result</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <label class="field-label">Result</label>
+    <div class="output-box" id="json-out" style="min-height:80px">Paste JSON above and pick an action.</div>
+    <div class="copy-hint" id="json-status">—</div>
+  </div>
+
+  <div class="ad-slot"><div>Ad space — reserved</div></div>
+
+  <div class="support-box">
+    <p>Formatted something gnarly? Support DevToolbox:</p>
+    <a href="https://www.buymeacoffee.com/" target="_blank" rel="noopener"><button class="btn success">☕ Buy me a coffee</button></a>
+  </div>
+</main>
+<footer class="site-footer">
+  <div>© 2026 DevToolbox · <a href="json.html">JSON formatter</a></div>
+  <div><a href="about.html">About</a><a href="privacy.html">Privacy Policy</a><a href="contact.html">Contact</a></div>
+</footer>
+<script>
+let last="";
+function setOut(txt,ok){const o=document.getElementById("json-out");o.textContent=txt;o.className="output-box"+(ok?" ok":" err");}
+function getJson(){
+  const s=document.getElementById("json-input").value.trim();
+  if(!s){setOut("Paste some JSON first.",false);return null;}
+  try{return JSON.parse(s);}
+  catch(e){
+    const m=e.message.match(/position (\d+)/);
+    let hint="";
+    if(m){const pos=+m[1];const before=s.slice(0,pos);const line=before.split("\n").length;const col=pos-before.lastIndexOf("\n");hint="\nNear: line "+line+", column "+col+"\nContext: …"+s.slice(Math.max(0,pos-20),pos)+"▶"+s.slice(pos,pos+20)+"…";}
+    setOut("Invalid JSON: "+e.message+hint,false);return null;
+  }
+}
+function fmt(n){const j=getJson();if(j===null)return;last=JSON.stringify(j,null,n);setOut(last,true);document.getElementById("json-status").textContent=last.length+" chars, "+(last.match(/\n/g)||[]).length+1+" lines";}
+function minify(){const j=getJson();if(j===null)return;last=JSON.stringify(j);setOut(last,true);document.getElementById("json-status").textContent=last.length+" chars (minified)";}
+function sortKeys(){const j=getJson();if(j===null)return;
+  const srt=v=>{if(Array.isArray(v))return v.map(srt);if(v&&typeof v==="object"){return Object.keys(v).sort().reduce((a,k)=>(a[k]=srt(v[k]),a),{});}return v;};
+  last=JSON.stringify(srt(j),null,2);setOut(last,true);document.getElementById("json-status").textContent="Keys sorted alphabetically.";}
+function copy(){if(!last)return;navigator.clipboard.writeText(last);const b=event.target;b.textContent="Copied ✓";setTimeout(()=>b.textContent="Copy result",1200);}
+</script>
+</body>
+</html>

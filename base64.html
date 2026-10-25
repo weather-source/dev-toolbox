@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="canonical" href="https://weather-source.github.io/dev-toolbox/base64.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="DevToolbox">
+<meta property="og:title" content="Base64 Encoder / Decoder | DevToolbox">
+<meta property="og:description" content="Encode and decode Base64 in your browser with full UTF-8 support and URL-safe output.">
+<meta property="og:url" content="https://weather-source.github.io/dev-toolbox/base64.html">
+<meta name="twitter:card" content="summary">
+<title>Base64 Encoder / Decoder | DevToolbox</title>
+<meta name="description" content="Encode and decode Base64 in your browser. Supports UTF-8 text and URL-safe Base64. Free, private, no upload.">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="logo" href="./index.html">Dev<span>Toolbox</span></a>
+  <nav class="main-nav">
+    <a href="cron.html">Cron</a><a href="regex.html">Regex</a><a href="jwt.html">JWT</a>
+    <a href="timestamp.html">Timestamp</a><a href="password.html">Password</a>
+    <a href="image-compressor.html">Image Compress</a><a href="color.html">Color</a>
+    <a href="qrcode.html">QR Code</a><a href="json.html">JSON</a>
+    <a href="base64.html">Base64</a><a href="uuid.html">UUID</a><a href="url-encode.html">URL Encode</a>
+  </nav>
+</header>
+<main>
+  <h1>Base64 Encoder / Decoder</h1>
+  <p class="page-desc">Convert text to Base64 and back, with full UTF-8 support and optional URL-safe output (uses - and _ instead of + and /).</p>
+
+  <div class="card">
+    <label class="field-label" for="b64-in">Input (plain text or Base64)</label>
+    <textarea id="b64-in" placeholder="Type text to encode, or paste Base64 to decode…"></textarea>
+    <div class="checkbox-row" style="margin-top:8px"><input type="checkbox" id="b64-urlsafe"><label for="b64-urlsafe">URL-safe alphabet (-_ instead of +/)</label></div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" onclick="encode()">Encode →</button>
+      <button class="btn" onclick="decode()">Decode →</button>
+      <button class="btn secondary" onclick="swap()">⇅ Swap result into input</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <label class="field-label">Result</label>
+    <div class="output-box" id="b64-out">—</div>
+    <button class="btn secondary" style="margin-top:10px" onclick="copyRes(event)">Copy</button>
+  </div>
+
+  <div class="ad-slot"><div>Ad space — reserved</div></div>
+
+  <div class="support-box">
+    <p>Useful? Support DevToolbox:</p>
+    <a href="https://www.buymeacoffee.com/" target="_blank" rel="noopener"><button class="btn success">☕ Buy me a coffee</button></a>
+  </div>
+</main>
+<footer class="site-footer">
+  <div>© 2026 DevToolbox · <a href="base64.html">Base64 converter</a></div>
+  <div><a href="about.html">About</a><a href="privacy.html">Privacy Policy</a><a href="contact.html">Contact</a></div>
+</footer>
+<script>
+function urlSafe(s,checked){return checked?s.replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,""):s.replace(/-/g,"+").replace(/_/g,"/");}
+function encode(){
+  const txt=document.getElementById("b64-in").value;
+  if(!txt){out("Enter some text first.",false);return;}
+  const bytes=new TextEncoder().encode(txt);
+  let bin="";bytes.forEach(b=>bin+=String.fromCharCode(b));
+  out(urlSafe(btoa(bin),document.getElementById("b64-urlsafe").checked),true);
+}
+function decode(){
+  const txt=document.getElementById("b64-in").value.trim();
+  if(!txt){out("Paste Base64 first.",false);return;}
+  try{
+    const bin=atob(urlSafe(txt,document.getElementById("b64-urlsafe").checked));
+    const bytes=Uint8Array.from(bin,c=>c.charCodeAt(0));
+    out(new TextDecoder().decode(bytes),true);
+  }catch(e){out("Invalid Base64 input.",false);}
+}
+function swap(){
+  const res=document.getElementById("b64-out").textContent;
+  if(res&&res!=="—"){document.getElementById("b64-in").value=res;document.getElementById("b64-out").textContent="—";}
+}
+function out(t,ok){const o=document.getElementById("b64-out");o.textContent=t;o.className="output-box"+(ok?" ok":" err");}
+function copyRes(e){const t=document.getElementById("b64-out").textContent;if(t==="—")return;navigator.clipboard.writeText(t);e.target.textContent="Copied ✓";setTimeout(()=>e.target.textContent="Copy",1200);}
+</script>
+</body>
+</html>
