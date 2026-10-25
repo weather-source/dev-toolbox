@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JWT Decoder — Decode JSON Web Tokens Locally | DevToolbox</title>
+<meta name="description" content="Decode JWT header and payload instantly. 100% client-side — your tokens never leave the browser. Checks expiry and common claims.">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="logo" href="./index.html">Dev<span>Toolbox</span></a>
+  <nav class="main-nav">
+    <a href="cron.html">Cron</a>
+    <a href="regex.html">Regex</a>
+    <a class="active" href="jwt.html">JWT</a>
+    <a href="timestamp.html">Timestamp</a>
+    <a href="password.html">Password</a>
+    <a href="image-compressor.html">Image Compress</a>
+    <a href="color.html">Color</a>
+    <a href="qrcode.html">QR Code</a>
+  </nav>
+</header>
+<main>
+  <h1>JWT Decoder</h1>
+  <p class="page-desc">Paste a JSON Web Token to decode its header and payload. Decoding happens entirely in your browser — the token is never sent to any server. (Signature is shown but not verified.)</p>
+
+  <div class="card">
+    <label class="field-label" for="jwt-input">JWT (header.payload.signature)</label>
+    <textarea id="jwt-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NSJ9.abc..."></textarea>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" onclick="decodeJwt()">Decode</button>
+      <button class="btn secondary" onclick="document.getElementById('jwt-input').value='';document.getElementById('jwt-header').textContent='—';document.getElementById('jwt-payload').textContent='—';document.getElementById('jwt-meta').textContent='—'">Clear</button>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="card">
+      <h2 style="margin-top:0">Header</h2>
+      <div class="output-box" id="jwt-header">—</div>
+    </div>
+    <div class="card">
+      <h2 style="margin-top:0">Payload</h2>
+      <div class="output-box" id="jwt-payload">—</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0">Token info</h2>
+    <div class="output-box" id="jwt-meta">—</div>
+  </div>
+
+  <div class="ad-slot" id="ad-jwt-1"><div>Ad space — reserved</div></div>
+
+  <div class="support-box">
+    <p>This tool is private by design. Support it:</p>
+    <a href="https://www.buymeacoffee.com/" target="_blank" rel="noopener"><button class="btn success">☕ Buy me a coffee</button></a>
+  </div>
+</main>
+<footer class="site-footer">
+  <div>© 2026 DevToolbox · <a href="jwt.html">JWT decoder</a></div>
+  <div><a href="about.html">About</a><a href="privacy.html">Privacy Policy</a><a href="contact.html">Contact</a></div>
+</footer>
+<script>
+function b64urlDecode(s){
+  s=s.replace(/-/g,"+").replace(/_/g,"/");
+  while(s.length%4)s+="=";
+  const bin=atob(s);
+  try{
+    return decodeURIComponent(bin.split("").map(c=>"%"+("00"+c.charCodeAt(0).toString(16)).slice(-2)).join(""));
+  }catch(e){
+    return bin; // not valid UTF-8 — return raw
+  }
+}
+function decodeJwt(){
+  const raw=document.getElementById("jwt-input").value.trim();
+  const H=document.getElementById("jwt-header"),P=document.getElementById("jwt-payload"),M=document.getElementById("jwt-meta");
+  try{
+    const parts=raw.split(".");
+    if(parts.length<2||!parts[0]||!parts[1])throw "a JWT must have at least header.payload";
+    const header=JSON.parse(b64urlDecode(parts[0]));
+    const payload=JSON.parse(b64urlDecode(parts[1]));
+    H.textContent=JSON.stringify(header,null,2);H.className="output-box ok";
+    P.textContent=JSON.stringify(payload,null,2);P.className="output-box ok";
+    const lines=["Algorithm: "+(header.alg||"?"), "Type: "+(header.typ||"?")];
+    if(payload.exp){const d=new Date(payload.exp*1000);lines.push("Expires: "+d.toLocaleString()+(d<new Date()?"  ⚠ EXPIRED":"  ✓ still valid"));}
+    if(payload.iat)lines.push("Issued at: "+new Date(payload.iat*1000).toLocaleString());
+    if(payload.sub)lines.push("Subject: "+payload.sub);
+    if(payload.iss)lines.push("Issuer: "+payload.iss);
+    lines.push("Signature: "+(parts[2]?parts[2].slice(0,24)+"… ("+parts[2].length+" chars, not verified)":"none (unsigned)"));
+    M.textContent=lines.join("\n");M.className="output-box ok";
+  }catch(e){
+    H.textContent="—";H.className="output-box";P.textContent="Error: "+e;P.className="output-box err";M.textContent="—";M.className="output-box";
+  }
+}
+document.getElementById("jwt-input").addEventListener("input",decodeJwt);
+</script>
+</body>
+</html>

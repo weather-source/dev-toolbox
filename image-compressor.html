@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image Compressor — Compress & Resize JPG/PNG/WebP in Browser | DevToolbox</title>
+<meta name="description" content="Compress and resize images directly in your browser. JPG, PNG, WebP supported. No upload — your images never leave your device. Free forever.">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="logo" href="./index.html">Dev<span>Toolbox</span></a>
+  <nav class="main-nav">
+    <a href="cron.html">Cron</a>
+    <a href="regex.html">Regex</a>
+    <a href="jwt.html">JWT</a>
+    <a href="timestamp.html">Timestamp</a>
+    <a href="password.html">Password</a>
+    <a class="active" href="image-compressor.html">Image Compress</a>
+    <a href="color.html">Color</a>
+    <a href="qrcode.html">QR Code</a>
+  </nav>
+</header>
+<main>
+  <h1>Image Compressor & Resizer</h1>
+  <p class="page-desc">Drop in an image, choose quality and optional max width — get a smaller file back. Everything is processed by your browser with canvas; nothing is uploaded anywhere.</p>
+
+  <div class="card" id="drop-zone" style="text-align:center;padding:44px 20px;cursor:pointer;border-style:dashed" onclick="document.getElementById('file-input').click()">
+    <div style="font-size:2rem">🖼️</div>
+    <div style="font-weight:600;margin:8px 0">Click or drop an image here</div>
+    <div style="color:var(--text-dim);font-size:.85rem">JPG · PNG · WebP — max ~30 MB</div>
+    <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp" style="display:none">
+  </div>
+
+  <div class="card" id="controls" style="display:none">
+    <div class="row">
+      <div>
+        <label class="field-label">Quality: <span id="q-val">0.7</span></label>
+        <input type="range" id="quality" min="0.05" max="0.95" step="0.05" value="0.7" oninput="document.getElementById('q-val').textContent=this.value;compress()">
+      </div>
+      <div>
+        <label class="field-label">Max width (px, 0 = keep original)</label>
+        <input type="number" id="maxw" value="0" min="0" oninput="compress()">
+      </div>
+      <div>
+        <label class="field-label">Output format</label>
+        <select id="format" onchange="compress()">
+          <option value="image/jpeg">JPEG</option>
+          <option value="image/webp">WebP (smaller)</option>
+          <option value="image/png">PNG</option>
+        </select>
+      </div>
+    </div>
+    <div class="row" style="margin-top:16px">
+      <div>
+        <label class="field-label">Original</label>
+        <div class="output-box" id="orig-info">—</div>
+      </div>
+      <div>
+        <label class="field-label">Compressed</label>
+        <div class="output-box ok" id="comp-info">—</div>
+      </div>
+    </div>
+    <div style="margin-top:14px;display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+      <a id="download-link" download="compressed.jpg"><button class="btn success">⬇ Download compressed image</button></a>
+      <img id="preview" style="max-height:160px;border-radius:8px;border:1px solid var(--border)" alt="compressed preview">
+    </div>
+  </div>
+
+  <div class="ad-slot" id="ad-img-1"><div>Ad space — reserved</div></div>
+
+  <div class="support-box">
+    <p>Just saved you an upload? Support the project:</p>
+    <a href="https://www.buymeacoffee.com/" target="_blank" rel="noopener"><button class="btn success">☕ Buy me a coffee</button></a>
+  </div>
+</main>
+<footer class="site-footer">
+  <div>© 2026 DevToolbox · <a href="image-compressor.html">Image compressor</a></div>
+  <div><a href="about.html">About</a><a href="privacy.html">Privacy Policy</a><a href="contact.html">Contact</a></div>
+</footer>
+<script>
+let imgEl=null,origName="image";
+const dz=document.getElementById("drop-zone");
+dz.addEventListener("dragover",e=>{e.preventDefault();dz.style.borderColor="var(--accent)";});
+dz.addEventListener("dragleave",()=>dz.style.borderColor="");
+dz.addEventListener("drop",e=>{e.preventDefault();dz.style.borderColor="";if(e.dataTransfer.files[0])loadFile(e.dataTransfer.files[0]);});
+document.getElementById("file-input").addEventListener("change",e=>{if(e.target.files[0])loadFile(e.target.files[0]);});
+function kb(b){return b<1024?b+" B":(b/1024).toFixed(1)+" KB";}
+function loadFile(f){
+  origName=f.name.replace(/\.[^.]+$/,"");
+  const url=URL.createObjectURL(f);
+  imgEl=new Image();
+  imgEl.onload=()=>{
+    document.getElementById("controls").style.display="block";
+    document.getElementById("orig-info").textContent=kb(f.size)+" · "+imgEl.naturalWidth+"×"+imgEl.naturalHeight+" · "+f.type;
+    compress();
+  };
+  imgEl.src=url;
+}
+function compress(){
+  if(!imgEl)return;
+  const q=+document.getElementById("quality").value;
+  const maxw=+document.getElementById("maxw").value||imgEl.naturalWidth;
+  const fmt=document.getElementById("format").value;
+  const scale=Math.min(1,maxw/imgEl.naturalWidth);
+  const w=Math.round(imgEl.naturalWidth*scale),h=Math.round(imgEl.naturalHeight*scale);
+  const c=document.createElement("canvas");c.width=w;c.height=h;
+  const ctx=c.getContext("2d");
+  if(fmt==="image/jpeg"){ctx.fillStyle="#fff";ctx.fillRect(0,0,w,h);}
+  ctx.drawImage(imgEl,0,0,w,h);
+  c.toBlob(blob=>{
+    if(!blob){document.getElementById("comp-info").textContent="Compression failed — try another format.";return;}
+    const prev=parseFloat(document.getElementById("orig-info").textContent);
+    const info=kb(blob.size)+" · "+w+"×"+h+" · "+fmt.split("/")[1].toUpperCase();
+    document.getElementById("comp-info").textContent=info;
+    const url=URL.createObjectURL(blob);
+    const link=document.getElementById("download-link");
+    link.href=url;link.download=origName+"-min."+(fmt==="image/jpeg"?"jpg":fmt.split("/")[1]);
+    document.getElementById("preview").src=url;
+  },fmt,q);
+}
+</script>
+</body>
+</html>

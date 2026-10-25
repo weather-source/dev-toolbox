@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cron Expression Generator & Explainer — Free Online Tool | DevToolbox</title>
+<meta name="description" content="Build and explain cron expressions in plain English. See the next 5 run times. Free, private, browser-based cron maker.">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="logo" href="./index.html">Dev<span>Toolbox</span></a>
+  <nav class="main-nav">
+    <a class="active" href="cron.html">Cron</a>
+    <a href="regex.html">Regex</a>
+    <a href="jwt.html">JWT</a>
+    <a href="timestamp.html">Timestamp</a>
+    <a href="password.html">Password</a>
+    <a href="image-compressor.html">Image Compress</a>
+    <a href="color.html">Color</a>
+    <a href="qrcode.html">QR Code</a>
+  </nav>
+</header>
+<main>
+  <h1>Cron Expression Generator & Explainer</h1>
+  <p class="page-desc">Enter a 5-field cron expression (minute, hour, day-of-month, month, day-of-week) to get a plain-English explanation and the next 5 run times. Runs entirely in your browser.</p>
+
+  <div class="card">
+    <label class="field-label" for="cron-input">Cron expression</label>
+    <input type="text" id="cron-input" value="*/15 9-17 * * 1-5" spellcheck="false">
+    <div class="row" style="margin-top:12px">
+      <button class="btn" onclick="runCron()">Explain & preview</button>
+      <button class="btn secondary" onclick="document.getElementById('cron-input').value='0 0 * * *';runCron()">Every midnight</button>
+      <button class="btn secondary" onclick="document.getElementById('cron-input').value='*/5 * * * *';runCron()">Every 5 min</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0">Explanation</h2>
+    <div class="output-box" id="cron-explain">—</div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0">Next 5 run times (your local time)</h2>
+    <div class="output-box" id="cron-next">—</div>
+  </div>
+
+  <div class="ad-slot" id="ad-cron-1"><div>Ad space — reserved</div></div>
+
+  <h2>Cron field reference</h2>
+  <div class="card">
+    <table class="simple">
+      <tr><th>Field</th><th>Allowed values</th><th>Special chars</th></tr>
+      <tr><td>Minute</td><td>0–59</td><td>* , - /</td></tr>
+      <tr><td>Hour</td><td>0–23</td><td>* , - /</td></tr>
+      <tr><td>Day of month</td><td>1–31</td><td>* , - /</td></tr>
+      <tr><td>Month</td><td>1–12 or JAN–DEC</td><td>* , - /</td></tr>
+      <tr><td>Day of week</td><td>0–7 (0/7=Sun) or SUN–SAT</td><td>* , - /</td></tr>
+    </table>
+  </div>
+
+  <div class="support-box">
+    <p>Save this tool? Share it with a teammate, or support the project:</p>
+    <a href="https://www.buymeacoffee.com/" target="_blank" rel="noopener"><button class="btn success">☕ Buy me a coffee</button></a>
+  </div>
+</main>
+<footer class="site-footer">
+  <div>© 2026 DevToolbox · <a href="cron.html">Cron generator</a></div>
+  <div><a href="about.html">About</a><a href="privacy.html">Privacy Policy</a><a href="contact.html">Contact</a></div>
+</footer>
+<script>
+const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const DAYS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+function parseField(field,min,max,names){
+  if(field==="*")return {type:"all"};
+  const parts=field.split(",");
+  const sets=[];
+  for(const p of parts){
+    let m;
+    if((m=p.match(/^(\*|\d+-\d+)\/(\d+)$/))){
+      const step=+m[2];let lo=min,hi=max;
+      if(m[1]!=="*"){const r=m[1].split("-");lo=+r[0];hi=+r[1];}
+      if(step<1||lo<min||hi>max||lo>hi)throw "invalid range/step in '"+p+"'";
+      sets.push({type:"range",lo,hi,step});
+    } else if((m=p.match(/^(\w+)-(\w+)$/))){
+      let lo=names?names.indexOf(m[1].toUpperCase()):(+m[1]),hi=names?names.indexOf(m[2].toUpperCase()):(+m[2]);
+      if(names&&(lo<0||hi<0)){lo=+m[1];hi=+m[2];}
+      if(lo<min||hi>max||lo>hi)throw "invalid range '"+p+"'";
+      sets.push({type:"range",lo,hi,step:1});
+    } else {
+      let v=names?names.indexOf(p.toUpperCase()):(+p);
+      if(names&&v<0)v=+p;
+      if(!Number.isInteger(v)||v<min||v>max)throw "invalid value '"+p+"'";
+      sets.push({type:"range",lo:v,hi:v,step:1});
+    }
+  }
+  return {type:"sets",sets};
+}
+function matches(f,v){ // returns boolean for a field spec at value v
+  if(f.type==="all")return true;
+  return f.sets.some(s=>v>=s.lo&&v<=s.hi&&(v-s.lo)%s.step===0);
+}
+function describe(f,unit,all,unitNames){
+  if(f.type==="all")return "every "+all;
+  const segs=f.sets.map(s=>{
+    if(s.lo===s.hi&&s.step===1)return unit+" "+(unitNames?unitNames[s.lo]:s.lo);
+    if(s.step===1)return unit+"s "+s.lo+"–"+s.hi;
+    if(s.lo===0&&s.hi===59&&unit==="minute")return "every "+s.step+" minutes";
+    return unit+" "+s.lo+" through "+s.hi+" every "+s.step;
+  });
+  return segs.join(" and ");
+}
+function runCron(){
+  const raw=document.getElementById("cron-input").value.trim();
+  const ex=document.getElementById("cron-explain"),nx=document.getElementById("cron-next");
+  try{
+    const fields=raw.split(/\s+/);
+    if(fields.length!==5)throw "expected 5 fields, got "+fields.length;
+    const F=[
+      parseField(fields[0],0,59),
+      parseField(fields[1],0,23),
+      parseField(fields[2],1,31),
+      parseField(fields[3],1,12,MONTHS),
+      parseField(fields[4],0,7,DAYS)
+    ];
+    if(F[4].type==="sets")F[4].sets.forEach(s=>{if(s.hi===7)s.hi=0;});
+    const domStar=fields[2]==="*",dowStar=fields[4]==="*";
+    const desc=[
+      describe(F[0],"minute","minute"),
+      describe(F[1],"hour","hour"),
+      describe(F[2],"day","day of the month"),
+      describe(F[3],"month","month",MONTHS),
+      describe(F[4],"day","day of the week",DAYS)
+    ].join("; ");
+    let human="Runs: "+desc+".";
+    if(!domStar&&!dowStar)human+=" (cron fires when EITHER day field matches)";
+    ex.textContent=human;ex.className="output-box ok";
+    // next runs
+    const out=[];let d=new Date();d.setSeconds(0,0);d.setMinutes(d.getMinutes()+1);
+    let guard=0;
+    while(out.length<5&&guard<400000){
+      guard++;
+      const okMin=matches(F[0],d.getMinutes()),okH=matches(F[1],d.getHours()),
+            okMon=matches(F[3],d.getMonth()+1);
+      if(!(okMin&&okH&&okMon)){d.setMinutes(d.getMinutes()+1);continue;}
+      const okDom=matches(F[2],d.getDate()),okDow=matches(F[4],d.getDay());
+      let okDay;
+      if(domStar)okDay=okDow; else if(dowStar)okDay=okDom; else okDay=okDom||okDow;
+      if(!okDay){d.setMinutes(d.getMinutes()+1);continue;}
+      out.push(d.toLocaleString(undefined,{weekday:"short",year:"numeric",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}));
+      d.setMinutes(d.getMinutes()+1);
+    }
+    nx.textContent=out.length?out.join("\n"):"No upcoming run found within the search horizon.";
+    nx.className="output-box ok";
+  }catch(e){
+    ex.textContent="Error: "+e+". Use 5 space-separated fields, e.g. */15 9-17 * * 1-5";
+    ex.className="output-box err";nx.textContent="—";nx.className="output-box";
+  }
+}
+runCron();
+document.getElementById("cron-input").addEventListener("input",runCron);
+</script>
+</body>
+</html>

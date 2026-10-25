@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Color Converter — HEX ↔ RGB ↔ HSL | DevToolbox</title>
+<meta name="description" content="Convert colors between HEX, RGB and HSL. Live swatch, tints & shades palette, and WCAG contrast ratio against black/white. Free and private.">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="logo" href="./index.html">Dev<span>Toolbox</span></a>
+  <nav class="main-nav">
+    <a href="cron.html">Cron</a>
+    <a href="regex.html">Regex</a>
+    <a href="jwt.html">JWT</a>
+    <a href="timestamp.html">Timestamp</a>
+    <a href="password.html">Password</a>
+    <a href="image-compressor.html">Image Compress</a>
+    <a class="active" href="color.html">Color</a>
+    <a href="qrcode.html">QR Code</a>
+  </nav>
+</header>
+<main>
+  <h1>Color Converter</h1>
+  <p class="page-desc">Enter a color in any format (HEX, RGB, HSL). Everything updates live: swatch, all notations, tints & shades, and contrast ratios.</p>
+
+  <div class="card">
+    <div class="row">
+      <div style="flex:2">
+        <label class="field-label" for="color-input">Color (e.g. #4f8cff, rgb(79,140,255), hsl(217,100%,65%))</label>
+        <input type="text" id="color-input" value="#4f8cff" spellcheck="false">
+      </div>
+      <div style="flex:1;display:flex;align-items:flex-end">
+        <div class="color-swatch" id="swatch" style="width:100%"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0">Notations</h2>
+    <div id="notations"></div>
+    <button class="btn secondary" style="margin-top:12px" onclick="copyNotations(event)">Copy all</button>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0">Tints & shades</h2>
+    <div id="palette" style="display:flex;border-radius:8px;overflow:hidden;border:1px solid var(--border)"></div>
+    <div class="copy-hint">Click a step to copy its HEX value.</div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0">WCAG contrast</h2>
+    <div id="contrast"></div>
+  </div>
+
+  <div class="ad-slot" id="ad-color-1"><div>Ad space — reserved</div></div>
+
+  <div class="support-box">
+    <p>Designing something nice? Support DevToolbox:</p>
+    <a href="https://www.buymeacoffee.com/" target="_blank" rel="noopener"><button class="btn success">☕ Buy me a coffee</button></a>
+  </div>
+</main>
+<footer class="site-footer">
+  <div>© 2026 DevToolbox · <a href="color.html">Color converter</a></div>
+  <div><a href="about.html">About</a><a href="privacy.html">Privacy Policy</a><a href="contact.html">Contact</a></div>
+</footer>
+<script>
+function hexToRgb(s){
+  s=s.trim().replace(/^#/,"");
+  if(/^[0-9a-f]{3}$/i.test(s))s=[...s].map(c=>c+c).join("");
+  if(!/^[0-9a-f]{6}$/i.test(s))return null;
+  return {r:parseInt(s.slice(0,2),16),g:parseInt(s.slice(2,4),16),b:parseInt(s.slice(4,6),16)};
+}
+function rgbToHsl(r,g,b){
+  r/=255;g/=255;b/=255;
+  const max=Math.max(r,g,b),min=Math.min(r,g,b);let h=0,s=0,l=(max+min)/2;
+  if(max!==min){const d=max-min;s=l>0.5?d/(2-max-min):d/(max+min);
+    switch(max){case r:h=(g-b)/d+(g<b?6:0);break;case g:h=(b-r)/d+2;break;case b:h=(r-g)/d+4;}
+    h*=60;}
+  return {h:Math.round(h),s:Math.round(s*100),l:Math.round(l*100)};
+}
+function hslToRgb(h,s,l){
+  s/=100;l/=100;
+  const k=n=>(n+h/30)%12,a=s*Math.min(l,1-l);
+  const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));
+  return {r:Math.round(f(0)*255),g:Math.round(f(8)*255),b:Math.round(f(4)*255)};
+}
+function toHex(r,g,b){return "#"+[r,g,b].map(v=>v.toString(16).padStart(2,"0")).join("");}
+function lum(r,g,b){
+  const a=[r,g,b].map(v=>{v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);});
+  return 0.2126*a[0]+0.7152*a[1]+0.0722*a[2];
+}
+let currentRgb={r:79,g:140,b:255};
+function update(){
+  const raw=document.getElementById("color-input").value;
+  let rgb=null,m;
+  if((m=raw.match(/^hsl\(\s*(\d+)[,\s]+(\d+)%?[,\s]+(\d+)%?\s*\)$/i)))rgb=hslToRgb(+m[1],+m[2],+m[3]);
+  else if((m=raw.match(/^rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)/i)))rgb={r:+m[1],g:+m[2],b:+m[3]};
+  else rgb=hexToRgb(raw);
+  if(!rgb||[rgb.r,rgb.g,rgb.b].some(v=>v<0||v>255)){document.getElementById("notations").innerHTML='<span style="color:var(--danger)">Could not parse color. Try #4f8cff, rgb(79,140,255) or hsl(217,100%,65%).</span>';return;}
+  currentRgb=rgb;
+  const hex=toHex(rgb.r,rgb.g,rgb.b);
+  const hsl=rgbToHsl(rgb.r,rgb.g,rgb.b);
+  document.getElementById("swatch").style.background=hex;
+  const rows=[
+    ["HEX",hex],["HEX (no #)",hex.slice(1)],
+    ["RGB","rgb("+rgb.r+", "+rgb.g+", "+rgb.b+")"],
+    ["HSL","hsl("+hsl.h+", "+hsl.s+"%, "+hsl.l+"%)"],
+    ["CSS var","--brand-color: "+hex+";"]
+  ];
+  document.getElementById("notations").innerHTML=rows.map(r=>'<div class="kv"><span class="k">'+r[0]+'</span><span>'+r[1]+'</span></div>').join("");
+  // palette: tints (toward white) then shades
+  const steps=[];
+  for(let i=9;i>=1;i--)steps.push(hslToRgb(hsl.h,hsl.s,Math.min(97,hsl.l+i*(90-hsl.l)/10)));
+  steps.push(rgb);
+  for(let i=1;i<=9;i++)steps.push(hslToRgb(hsl.h,Math.min(100,hsl.s+5),Math.max(3,hsl.l-i*hsl.l/10)));
+  const pal=document.getElementById("palette");
+  pal.innerHTML=steps.map((c,i)=>'<div data-hex="'+toHex(c.r,c.g,c.b)+'" title="'+toHex(c.r,c.g,c.b)+'" style="flex:1;height:56px;background:'+toHex(c.r,c.g,c.b)+';cursor:pointer"></div>').join("");
+  pal.querySelectorAll("div").forEach(d=>d.onclick=()=>{navigator.clipboard.writeText(d.dataset.hex);d.title="copied!";});
+  // contrast
+  const L=lum(rgb.r,rgb.g,rgb.b);
+  const cw=(1.05)/(L+0.05),cb=(L+0.05)/(0.05+0.05);
+  const rate=v=>v>=7?"AAA ✓":v>=4.5?"AA ✓":v>=3?"AA (large text) only ✗":"fail ✗";
+  document.getElementById("contrast").innerHTML=
+    '<div class="kv"><span class="k">vs white</span><span>'+cw.toFixed(2)+":1 — "+rate(cw)+'</span></div>'+
+    '<div class="kv"><span class="k">vs black</span><span>'+cb.toFixed(2)+":1 — "+rate(cb)+"</span></div>";
+}
+function copyNotations(e){
+  const hex=toHex(currentRgb.r,currentRgb.g,currentRgb.b);
+  const hsl=rgbToHsl(currentRgb.r,currentRgb.g,currentRgb.b);
+  navigator.clipboard.writeText("HEX: "+hex+"\nRGB: rgb("+currentRgb.r+", "+currentRgb.g+", "+currentRgb.b+")\nHSL: hsl("+hsl.h+", "+hsl.s+"%, "+hsl.l+"%)");
+  const b=e.target;b.textContent="Copied ✓";setTimeout(()=>b.textContent="Copy all",1200);
+}
+document.getElementById("color-input").addEventListener("input",update);
+update();
+</script>
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Code Generator — Free, Private, Download PNG | DevToolbox</title>
+<meta name="description" content="Generate QR codes for URLs, text, email or Wi-Fi sharing. Choose size and error correction, download as PNG. 100% browser-based.">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="logo" href="./index.html">Dev<span>Toolbox</span></a>
+  <nav class="main-nav">
+    <a href="cron.html">Cron</a>
+    <a href="regex.html">Regex</a>
+    <a href="jwt.html">JWT</a>
+    <a href="timestamp.html">Timestamp</a>
+    <a href="password.html">Password</a>
+    <a href="image-compressor.html">Image Compress</a>
+    <a href="color.html">Color</a>
+    <a class="active" href="qrcode.html">QR Code</a>
+  </nav>
+</header>
+<main>
+  <h1>QR Code Generator</h1>
+  <p class="page-desc">Create QR codes for links, plain text or Wi-Fi credentials. Rendered locally, downloadable as PNG with transparent-background option.</p>
+
+  <div class="card">
+    <label class="field-label">Content type</label>
+    <div class="row" style="margin-bottom:12px">
+      <select id="qr-type" onchange="onTypeChange()">
+        <option value="text">Text / URL</option>
+        <option value="wifi">Wi-Fi credentials</option>
+        <option value="email">Email (mailto)</option>
+      </select>
+    </div>
+
+    <div id="wrap-text">
+      <label class="field-label" for="qr-text">Text or URL</label>
+      <input type="text" id="qr-text" value="https://example.com" oninput="makeQr()">
+    </div>
+    <div id="wrap-wifi" style="display:none">
+      <label class="field-label" for="wifi-ssid">Network name (SSID)</label>
+      <input type="text" id="wifi-ssid" value="MyWiFi" oninput="makeQr()">
+      <div class="row" style="margin-top:10px">
+        <div>
+          <label class="field-label" for="wifi-pass">Password</label>
+          <input type="text" id="wifi-pass" value="" oninput="makeQr()">
+        </div>
+        <div>
+          <label class="field-label" for="wifi-enc">Encryption</label>
+          <select id="wifi-enc" onchange="makeQr()"><option>WPA</option><option>WEP</option><option value="nopass">Open</option></select>
+        </div>
+      </div>
+    </div>
+    <div id="wrap-email" style="display:none">
+      <label class="field-label" for="mail-to">Recipient email</label>
+      <input type="text" id="mail-to" value="hello@example.com" oninput="makeQr()">
+      <label class="field-label" style="margin-top:10px" for="mail-subject">Subject (optional)</label>
+      <input type="text" id="mail-subject" value="" oninput="makeQr()">
+    </div>
+
+    <div class="row" style="margin-top:14px">
+      <div>
+        <label class="field-label">Error correction</label>
+        <select id="qr-ecc" onchange="makeQr()"><option value="L">L — 7%</option><option value="M" selected>M — 15%</option><option value="Q">Q — 25%</option><option value="H">H — 30%</option></select>
+      </div>
+      <div>
+        <label class="field-label">PNG size: <span id="px-val">512</span>px</label>
+        <input type="range" id="qr-size" min="128" max="1024" step="64" value="512" oninput="document.getElementById('px-val').textContent=this.value;makeQr()">
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="text-align:center">
+    <canvas id="qr-canvas" width="512" height="512" style="max-width:300px;border-radius:8px"></canvas>
+    <div class="copy-hint" id="qr-status">—</div>
+    <div style="margin-top:14px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <button class="btn success" onclick="downloadPng()">⬇ Download PNG</button>
+      <button class="btn secondary" onclick="copyPng()">Copy image</button>
+    </div>
+  </div>
+
+  <div class="ad-slot" id="ad-qr-1"><div>Ad space — reserved</div></div>
+
+  <div class="support-box">
+    <p>QR codes for everyone, free. Support the project:</p>
+    <a href="https://www.buymeacoffee.com/" target="_blank" rel="noopener"><button class="btn success">☕ Buy me a coffee</button></a>
+  </div>
+</main>
+<footer class="site-footer">
+  <div>© 2026 DevToolbox · <a href="qrcode.html">QR code generator</a></div>
+  <div><a href="about.html">About</a><a href="privacy.html">Privacy Policy</a><a href="contact.html">Contact</a></div>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+<script>
+function escWifi(s){return s.replace(/([\\;,:"])/g,"\\$1");}
+function onTypeChange(){
+  const t=document.getElementById("qr-type").value;
+  document.getElementById("wrap-text").style.display=t==="text"?"block":"none";
+  document.getElementById("wrap-wifi").style.display=t==="wifi"?"block":"none";
+  document.getElementById("wrap-email").style.display=t==="email"?"block":"none";
+  makeQr();
+}
+function payload(){
+  const t=document.getElementById("qr-type").value;
+  if(t==="wifi"){
+    const ssid=document.getElementById("wifi-ssid").value,pass=document.getElementById("wifi-pass").value,
+          enc=document.getElementById("wifi-enc").value;
+    return "WIFI:T:"+(enc==="nopass"?"nopass":enc)+";S:"+escWifi(ssid)+(enc!=="nopass"?";P:"+escWifi(pass):"")+";;";
+  }
+  if(t==="email"){
+    const to=document.getElementById("mail-to").value,sub=document.getElementById("mail-subject").value;
+    return "mailto:"+to+(sub?"?subject="+encodeURIComponent(sub):"");
+  }
+  return document.getElementById("qr-text").value;
+}
+let lastQr=null;
+function makeQr(){
+  const cv=document.getElementById("qr-canvas"),ctx=cv.getContext("2d"),st=document.getElementById("qr-status");
+  const data=payload();
+  if(!data){st.textContent="Enter some content first.";ctx.clearRect(0,0,cv.width,cv.height);return;}
+  if(typeof qrcode==="undefined"){st.textContent="QR library failed to load — check your connection and refresh.";return;}
+  try{
+    const ecc=document.getElementById("qr-ecc").value;
+    const qr=qrcode(0,ecc);
+    qr.addData(data);
+    qr.make();
+    lastQr=qr;
+    const n=qr.getModuleCount(),size=+document.getElementById("qr-size").value;
+    cv.width=size;cv.height=size;
+    ctx.fillStyle="#ffffff";ctx.fillRect(0,0,size,size);
+    ctx.fillStyle="#111111";
+    const quiet=4,cell=size/(n+quiet*2);
+    for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(qr.isDark(r,c))
+      ctx.fillRect(Math.round((c+quiet)*cell),Math.round((r+quiet)*cell),Math.ceil(cell),Math.ceil(cell));
+    st.textContent=size+"×"+size+" px · "+n+"×"+n+" modules · "+data.length+" chars of content";
+  }catch(e){
+    st.textContent="Cannot encode: content too long for a QR code. Shorten it or lower error correction.";
+    ctx.clearRect(0,0,cv.width,cv.height);
+  }
+}
+function downloadPng(){
+  if(!lastQr)return;
+  const a=document.createElement("a");
+  a.download="qrcode.png";
+  a.href=document.getElementById("qr-canvas").toDataURL("image/png");
+  a.click();
+}
+function copyPng(){
+  if(!lastQr)return;
+  document.getElementById("qr-canvas").toBlob(b=>{
+    navigator.clipboard.write([new ClipboardItem({"image/png":b})]).then(
+      ()=>{const btn=event.target;btn.textContent="Copied ✓";setTimeout(()=>btn.textContent="Copy image",1200);},
+      ()=>alert("Clipboard image not supported in this browser — use Download instead.")
+    );
+  });
+}
+makeQr();
+</script>
+</body>
+</html>

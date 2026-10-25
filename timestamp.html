@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unix Timestamp Converter | DevToolbox</title>
+<meta name="description" content="Convert Unix timestamps to human-readable dates and back. Seconds or milliseconds, any timezone offset. Free and private.">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="logo" href="./index.html">Dev<span>Toolbox</span></a>
+  <nav class="main-nav">
+    <a href="cron.html">Cron</a>
+    <a href="regex.html">Regex</a>
+    <a href="jwt.html">JWT</a>
+    <a class="active" href="timestamp.html">Timestamp</a>
+    <a href="password.html">Password</a>
+    <a href="image-compressor.html">Image Compress</a>
+    <a href="color.html">Color</a>
+    <a href="qrcode.html">QR Code</a>
+  </nav>
+</header>
+<main>
+  <h1>Unix Timestamp Converter</h1>
+  <p class="page-desc">Convert between Unix epoch timestamps and human dates. Auto-detects seconds vs milliseconds.</p>
+
+  <div class="card">
+    <h2 style="margin-top:0">Timestamp → Date</h2>
+    <label class="field-label" for="ts-input">Unix timestamp (s or ms)</label>
+    <input type="text" id="ts-input" placeholder="e.g. 1761139200" spellcheck="false">
+    <div class="row" style="margin-top:12px">
+      <button class="btn" onclick="tsToDate()">Convert</button>
+      <button class="btn secondary" onclick="document.getElementById('ts-input').value=Math.floor(Date.now()/1000);tsToDate()">Use now (s)</button>
+      <button class="btn secondary" onclick="document.getElementById('ts-input').value=Date.now();tsToDate()">Use now (ms)</button>
+    </div>
+    <div style="margin-top:14px"><div class="output-box" id="ts-out">—</div></div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0">Date → Timestamp</h2>
+    <div class="row">
+      <div><label class="field-label" for="dt-date">Date</label><input type="date" id="dt-date"></div>
+      <div><label class="field-label" for="dt-time">Time (local)</label><input type="time" id="dt-time" value="00:00"></div>
+    </div>
+    <div style="margin-top:12px"><button class="btn" onclick="dateToTs()">Convert</button></div>
+    <div style="margin-top:14px"><div class="output-box" id="dt-out">—</div></div>
+  </div>
+
+  <div class="ad-slot" id="ad-ts-1"><div>Ad space — reserved</div></div>
+
+  <div class="support-box">
+    <p>Share the converter, or support DevToolbox:</p>
+    <a href="https://www.buymeacoffee.com/" target="_blank" rel="noopener"><button class="btn success">☕ Buy me a coffee</button></a>
+  </div>
+</main>
+<footer class="site-footer">
+  <div>© 2026 DevToolbox · <a href="timestamp.html">Timestamp converter</a></div>
+  <div><a href="about.html">About</a><a href="privacy.html">Privacy Policy</a><a href="contact.html">Contact</a></div>
+</footer>
+<script>
+function fmt(d){
+  return d.toLocaleString(undefined,{weekday:"long",year:"numeric",month:"long",day:"numeric",hour:"2-digit",minute:"2-digit",second:"2-digit"})
+    +"\nUTC: "+d.toISOString()
+    +"\nRelative: "+rel(Date.now()-d.getTime());
+}
+function rel(ms){
+  const s=ms/1000,abs=Math.abs(s);
+  const units=[["year",31536000],["month",2592000],["day",86400],["hour",3600],["minute",60],["second",1]];
+  for(const[u,n]of units){if(abs>=n){const v=Math.floor(abs/n);return v+" "+u+(v>1?"s":"")+(s>0?" ago":" from now");}}
+  return "just now";
+}
+function tsToDate(){
+  const v=parseInt(document.getElementById("ts-input").value.trim(),10);
+  const out=document.getElementById("ts-out");
+  if(!Number.isFinite(v)||v<=0){out.textContent="Enter a valid positive integer timestamp.";out.className="output-box err";return;}
+  const ms=v>1e12?v:v*1000;
+  const d=new Date(ms);
+  if(isNaN(d)){out.textContent="Out of range.";out.className="output-box err";return;}
+  out.textContent=(v>1e12?"Detected: milliseconds\n":"Detected: seconds\n")+fmt(d);
+  out.className="output-box ok";
+}
+function dateToTs(){
+  const dv=document.getElementById("dt-date").value,tv=document.getElementById("dt-time").value||"00:00";
+  const out=document.getElementById("dt-out");
+  const d=new Date(dv+"T"+tv);
+  if(isNaN(d)){out.textContent="Pick a valid date.";out.className="output-box err";return;}
+  out.textContent="Seconds: "+Math.floor(d.getTime()/1000)+"\nMilliseconds: "+d.getTime()+"\nISO: "+d.toISOString();
+  out.className="output-box ok";
+}
+const now=new Date();
+document.getElementById("dt-date").value=now.toISOString().slice(0,10);
+document.getElementById("dt-input");
+document.getElementById("ts-input").value=Math.floor(Date.now()/1000);
+tsToDate();
+</script>
+</body>
+</html>

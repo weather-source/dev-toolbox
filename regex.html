@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Regex Tester — Live Regular Expression Tester with Highlighting | DevToolbox</title>
+<meta name="description" content="Test regular expressions live in your browser. Match highlighting, capture groups, flags, and replace preview. Free, private, no data leaves your device.">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="logo" href="./index.html">Dev<span>Toolbox</span></a>
+  <nav class="main-nav">
+    <a href="cron.html">Cron</a>
+    <a class="active" href="regex.html">Regex</a>
+    <a href="jwt.html">JWT</a>
+    <a href="timestamp.html">Timestamp</a>
+    <a href="password.html">Password</a>
+    <a href="image-compressor.html">Image Compress</a>
+    <a href="color.html">Color</a>
+    <a href="qrcode.html">QR Code</a>
+  </nav>
+</header>
+<main>
+  <h1>Regex Tester</h1>
+  <p class="page-desc">Type a pattern and sample text — matches highlight instantly and capture groups are listed below. Runs 100% locally.</p>
+
+  <div class="card">
+    <div class="row">
+      <div style="flex:3">
+        <label class="field-label" for="re-pattern">Regular expression (without delimiters)</label>
+        <input type="text" id="re-pattern" value="(\w+)@(\w+)\.com" spellcheck="false">
+      </div>
+      <div style="flex:1">
+        <label class="field-label" for="re-flags">Flags</label>
+        <input type="text" id="re-flags" value="g" spellcheck="false" maxlength="5">
+      </div>
+    </div>
+    <div style="margin-top:14px">
+      <label class="field-label" for="re-text">Test text</label>
+      <textarea id="re-text">Contact alice@example.com or bob.smith@test.org for details. Old address: carol@example.com.</textarea>
+    </div>
+    <div style="margin-top:14px">
+      <label class="field-label" for="re-replace">Replace with (optional — use $1, $2 for groups)</label>
+      <input type="text" id="re-replace" placeholder="e.g. [REDACTED:$1]">
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0">Highlighted matches</h2>
+    <div class="output-box" id="re-out"></div>
+    <div class="copy-hint" id="re-count">—</div>
+    <div id="re-replaced-wrap" style="margin-top:12px;display:none">
+      <label class="field-label">Replace preview</label>
+      <div class="output-box ok" id="re-replaced"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0">Capture groups</h2>
+    <div class="output-box" id="re-groups">—</div>
+  </div>
+
+  <div class="ad-slot" id="ad-regex-1"><div>Ad space — reserved</div></div>
+
+  <div class="support-box">
+    <p>Handy? Share it, or support the project:</p>
+    <a href="https://www.buymeacoffee.com/" target="_blank" rel="noopener"><button class="btn success">☕ Buy me a coffee</button></a>
+  </div>
+</main>
+<footer class="site-footer">
+  <div>© 2026 DevToolbox · <a href="regex.html">Regex tester</a></div>
+  <div><a href="about.html">About</a><a href="privacy.html">Privacy Policy</a><a href="contact.html">Contact</a></div>
+</footer>
+<script>
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function runRegex(){
+  const pat=document.getElementById("re-pattern").value;
+  const flags=document.getElementById("re-flags").value;
+  const text=document.getElementById("re-text").value;
+  const rep=document.getElementById("re-replace").value;
+  const out=document.getElementById("re-out"),cnt=document.getElementById("re-count");
+  const gout=document.getElementById("re-groups"),rwrap=document.getElementById("re-replaced-wrap");
+  let re;
+  try{re=new RegExp(pat,flags);}
+  catch(e){out.innerHTML='<span style="color:var(--danger)">Invalid regex: '+esc(e.message)+"</span>";out.className="output-box err";cnt.textContent="—";gout.textContent="—";rwrap.style.display="none";return;}
+  if(!text){out.textContent="—";out.className="output-box";cnt.textContent="0 matches";gout.textContent="—";rwrap.style.display="none";return;}
+  const gFlag=flags.includes("g");
+  const matches=[...text.matchAll(gFlag?re:new RegExp(pat,flags+"g"))];
+  // highlight
+  let html="",last=0;
+  for(const m of matches){
+    const idx=m.index??0;
+    html+=esc(text.slice(last,idx))+"<mark>"+esc(m[0])+"</mark>";
+    last=idx+m[0].length;
+    if(!gFlag)break;
+  }
+  html+=esc(text.slice(last));
+  out.innerHTML=html||esc(text);out.className="output-box";
+  cnt.textContent=matches.length+" match"+(matches.length===1?"":"es");
+  // groups
+  const lines=[];
+  matches.forEach((m,i)=>{
+    if(m.length>1)m.forEach((g,gi)=>{if(gi>0)lines.push("match["+(i+1)+"].group"+gi+" = "+JSON.stringify(g));});
+  });
+  gout.textContent=lines.length?lines.join("\n"):"No capture groups in matches.";
+  // replace preview
+  if(rep){rwrap.style.display="block";
+    try{document.getElementById("re-replaced").textContent=text.replace(new RegExp(pat,flags.includes("g")?flags:flags+"g"),rep);}
+    catch(e){document.getElementById("re-replaced").textContent="Replace error: "+e.message;}
+  } else rwrap.style.display="none";
+}
+["re-pattern","re-flags","re-text","re-replace"].forEach(id=>document.getElementById(id).addEventListener("input",runRegex));
+runRegex();
+</script>
+</body>
+</html>
