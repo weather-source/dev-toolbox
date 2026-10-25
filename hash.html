@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="canonical" href="https://weather-source.github.io/dev-toolbox/hash.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="DevToolbox">
+<meta property="og:title" content="Hash Generator — SHA-1, SHA-256, SHA-384, SHA-512 Online | DevToolbox">
+<meta property="og:description" content="Generate SHA-1, SHA-256, SHA-384 and SHA-512 hashes from any text, instantly and locally in your browser via the Web Crypto API.">
+<meta property="og:url" content="https://weather-source.github.io/dev-toolbox/hash.html">
+<meta name="twitter:card" content="summary">
+<title>Hash Generator — SHA-1, SHA-256, SHA-384, SHA-512 Online | DevToolbox</title>
+<meta name="description" content="Generate SHA-1, SHA-256, SHA-384 and SHA-512 hashes from any text, instantly and locally in your browser via the Web Crypto API.">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="manifest" href="site.webmanifest">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="logo" href="./index.html">Dev<span>Toolbox</span></a>
+  <nav class="main-nav">
+    <a href="cron.html">Cron</a><a href="regex.html">Regex</a><a href="jwt.html">JWT</a>
+    <a href="timestamp.html">Timestamp</a><a href="password.html">Password</a>
+    <a href="image-compressor.html">Image Compress</a><a href="color.html">Color</a>
+    <a href="qrcode.html">QR Code</a><a href="json.html">JSON</a>
+    <a href="base64.html">Base64</a><a href="uuid.html">UUID</a><a href="url-encode.html">URL Encode</a>
+    <a href="diff.html">Diff</a><a href="hash.html">Hash</a><a href="case.html">Case</a>
+    <a href="html-entities.html">HTML Entities</a><a href="markdown.html">Markdown</a><a href="csv-json.html">CSV/JSON</a>
+  </nav>
+</header>
+<main>
+  <h1>Hash Generator</h1>
+  <p class="page-desc">Type or paste text to get its SHA-1 / SHA-256 / SHA-384 / SHA-512 hashes, computed locally with the Web Crypto API. Nothing is uploaded.</p>
+  <div class="card">
+    <label class="field-label" for="hash-in">Input text</label>
+    <textarea id="hash-in" style="min-height:120px" placeholder="Type or paste text…"></textarea>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" onclick="hashAll()">Hash</button>
+      <button class="btn secondary" onclick="document.getElementById('hash-in').value='';hashAll()">Clear</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <label class="field-label">Hashes (hex)</label>
+    <div id="hash-out" class="output-box" style="min-height:100px">Hashes appear here as you type.</div>
+    <div class="copy-hint">Hashes update automatically · click any hash to copy it</div>
+  </div>
+  <div class="ad-slot"><div>Ad space — reserved</div></div>
+
+  <div class="support-box">
+    <p>Found this useful? Support DevToolbox:</p>
+    <a href="https://www.buymeacoffee.com/" target="_blank" rel="noopener"><button class="btn success">☕ Buy me a coffee</button></a>
+  </div>
+</main>
+<footer class="site-footer">
+  <div>© 2026 DevToolbox</div>
+  <div><a href="about.html">About</a><a href="privacy.html">Privacy Policy</a><a href="contact.html">Contact</a></div>
+</footer>
+<script>
+const ALGOS = ["SHA-1", "SHA-256", "SHA-384", "SHA-512"];
+async function hashAll() {
+  const s = document.getElementById("hash-in").value;
+  const out = document.getElementById("hash-out");
+  if (!s) { out.textContent = "Hashes appear here as you type."; return; }
+  const data = new TextEncoder().encode(s);
+  let html = "";
+  for (const a of ALGOS) {
+    const buf = await crypto.subtle.digest(a, data);
+    const hex = [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("");
+    html += '<div style="margin:6px 0"><strong style="display:inline-block;width:80px">' + a + '</strong> <span class="hash-line" data-h="' + hex + '" style="cursor:pointer;font-family:monospace;word-break:break-all">' + hex + "</span></div>";
+  }
+  out.innerHTML = html;
+  out.querySelectorAll(".hash-line").forEach(el => el.onclick = () => {
+    navigator.clipboard.writeText(el.dataset.h);
+    const old = el.style.color; el.style.color = "#8dffab";
+    setTimeout(() => el.style.color = old, 600);
+  });
+}
+document.getElementById("hash-in").addEventListener("input", hashAll);
+</script>
+</body>
+</html>

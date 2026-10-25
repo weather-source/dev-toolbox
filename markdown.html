@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="canonical" href="https://weather-source.github.io/dev-toolbox/markdown.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="DevToolbox">
+<meta property="og:title" content="Markdown Previewer — Live Markdown Renderer with HTML Output | DevToolbox">
+<meta property="og:description" content="Write Markdown and see rendered HTML live, side by side. Copy the generated HTML. Zero dependencies, fully client-side.">
+<meta property="og:url" content="https://weather-source.github.io/dev-toolbox/markdown.html">
+<meta name="twitter:card" content="summary">
+<title>Markdown Previewer — Live Markdown Renderer with HTML Output | DevToolbox</title>
+<meta name="description" content="Write Markdown and see rendered HTML live, side by side. Copy the generated HTML. Zero dependencies, fully client-side.">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="manifest" href="site.webmanifest">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="logo" href="./index.html">Dev<span>Toolbox</span></a>
+  <nav class="main-nav">
+    <a href="cron.html">Cron</a><a href="regex.html">Regex</a><a href="jwt.html">JWT</a>
+    <a href="timestamp.html">Timestamp</a><a href="password.html">Password</a>
+    <a href="image-compressor.html">Image Compress</a><a href="color.html">Color</a>
+    <a href="qrcode.html">QR Code</a><a href="json.html">JSON</a>
+    <a href="base64.html">Base64</a><a href="uuid.html">UUID</a><a href="url-encode.html">URL Encode</a>
+    <a href="diff.html">Diff</a><a href="hash.html">Hash</a><a href="case.html">Case</a>
+    <a href="html-entities.html">HTML Entities</a><a href="markdown.html">Markdown</a><a href="csv-json.html">CSV/JSON</a>
+  </nav>
+</header>
+<main>
+  <h1>Markdown Previewer</h1>
+  <p class="page-desc">Type Markdown on the left, see the rendered result on the right, and copy the raw HTML. Rendering happens locally with zero dependencies — no upload, no CDN.</p>
+
+  <div class="card">
+    <div class="row">
+      <div style="flex:1;min-width:240px">
+        <label class="field-label" for="md-in">Markdown</label>
+        <textarea id="md-in" style="min-height:260px;font-family:monospace" placeholder="# Hello&#10;&#10;Some **bold** and *italic* text.&#10;&#10;- list item&#10;- another"></textarea>
+      </div>
+      <div style="flex:1;min-width:240px">
+        <label class="field-label">Preview</label>
+        <div id="md-out" class="output-box md-preview" style="min-height:260px;overflow:auto"></div>
+      </div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn secondary" onclick="copyHtml()">Copy HTML</button>
+      <button class="btn secondary" onclick="document.getElementById('md-in').value='';render()">Clear</button>
+    </div>
+  </div>
+
+  <div class="ad-slot"><div>Ad space — reserved</div></div>
+
+  <div class="support-box">
+    <p>Found this useful? Support DevToolbox:</p>
+    <a href="https://www.buymeacoffee.com/" target="_blank" rel="noopener"><button class="btn success">☕ Buy me a coffee</button></a>
+  </div>
+</main>
+<footer class="site-footer">
+  <div>© 2026 DevToolbox</div>
+  <div><a href="about.html">About</a><a href="privacy.html">Privacy Policy</a><a href="contact.html">Contact</a></div>
+</footer>
+<script>
+// Tiny Markdown renderer (CommonMark subset): headings, bold/italic/code, links, images,
+// ul/ol lists, blockquotes, hr, code fences, paragraphs. No dependencies.
+function escH(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+function inline(s) {
+  s = escH(s);
+  s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
+  s = s.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, '<img alt="$1" src="$2" style="max-width:100%">');
+  s = s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  s = s.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+  s = s.replace(/~~([^~]+)~~/g, "<del>$1</del>");
+  return s;
+}
+function mdToHtml(src) {
+  const lines = src.split(/\n/);
+  let html = "", i = 0;
+  let pbuf = [];
+  const flush = () => { if (pbuf.length) { html += "<p>" + pbuf.map(inline).join("<br>") + "</p>"; pbuf = []; } };
+  while (i < lines.length) {
+    const L = lines[i];
+    if (/^```/.test(L)) {
+      flush();
+      const code = [];
+      i++;
+      while (i < lines.length && !/^```/.test(lines[i])) code.push(lines[i++]);
+      i++;
+      html += "<pre><code>" + escH(code.join("\n")) + "</code></pre>";
+    } else if (/^#{1,6} /.test(L)) {
+      flush();
+      const h = L.match(/^(#+) /)[1].length;
+      html += "<h" + h + ">" + inline(L.slice(h + 1).trim()) + "</h" + h + ">";
+      i++;
+    } else if (/^(---|\*\*\*)\s*$/.test(L)) { flush(); html += "<hr>"; i++; }
+    else if (/^> ?/.test(L)) {
+      flush();
+      const q = [];
+      while (i < lines.length && /^> ?/.test(lines[i])) q.push(lines[i++].replace(/^> ?/, ""));
+      html += "<blockquote>" + q.map(inline).join("<br>") + "</blockquote>";
+    } else if (/^\s*([-*+]|\d+\.) /.test(L)) {
+      flush();
+      const ordered = /^\s*\d+\. /.test(L);
+      const items = [];
+      while (i < lines.length && /^\s*([-*+]|\d+\.) /.test(lines[i])) items.push(lines[i++].replace(/^\s*([-*+]|\d+\.) /, ""));
+      html += "<" + (ordered ? "ol" : "ul") + ">" + items.map(t => "<li>" + inline(t) + "</li>").join("") + "</" + (ordered ? "ol" : "ul") + ">";
+    } else if (!L.trim()) { flush(); i++; }
+    else { pbuf.push(L.trim()); i++; }
+  }
+  flush();
+  return html;
+}
+let lastHtml = "";
+function render() {
+  const src = document.getElementById("md-in").value;
+  lastHtml = mdToHtml(src);
+  document.getElementById("md-out").innerHTML = lastHtml || '<span style="opacity:.5">(nothing to preview)</span>';
+}
+function copyHtml() { if (lastHtml) navigator.clipboard.writeText(lastHtml); }
+document.getElementById("md-in").addEventListener("input", render);
+render();
+</script>
+</body>
+</html>

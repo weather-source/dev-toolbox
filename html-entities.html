@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="canonical" href="https://weather-source.github.io/dev-toolbox/html-entities.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="DevToolbox">
+<meta property="og:title" content="HTML Entity Encoder / Decoder — Escape & Unescape HTML Online | DevToolbox">
+<meta property="og:description" content="Escape HTML special characters (&, <, >, quotes) to entities, or unescape entities back to text. Safe, instant, browser-based.">
+<meta property="og:url" content="https://weather-source.github.io/dev-toolbox/html-entities.html">
+<meta name="twitter:card" content="summary">
+<title>HTML Entity Encoder / Decoder — Escape & Unescape HTML Online | DevToolbox</title>
+<meta name="description" content="Escape HTML special characters (&, <, >, quotes) to entities, or unescape entities back to text. Safe, instant, browser-based.">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="manifest" href="site.webmanifest">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="logo" href="./index.html">Dev<span>Toolbox</span></a>
+  <nav class="main-nav">
+    <a href="cron.html">Cron</a><a href="regex.html">Regex</a><a href="jwt.html">JWT</a>
+    <a href="timestamp.html">Timestamp</a><a href="password.html">Password</a>
+    <a href="image-compressor.html">Image Compress</a><a href="color.html">Color</a>
+    <a href="qrcode.html">QR Code</a><a href="json.html">JSON</a>
+    <a href="base64.html">Base64</a><a href="uuid.html">UUID</a><a href="url-encode.html">URL Encode</a>
+    <a href="diff.html">Diff</a><a href="hash.html">Hash</a><a href="case.html">Case</a>
+    <a href="html-entities.html">HTML Entities</a><a href="markdown.html">Markdown</a><a href="csv-json.html">CSV/JSON</a>
+  </nav>
+</header>
+<main>
+  <h1>HTML Entity Encoder / Decoder</h1>
+  <p class="page-desc">Convert special characters to HTML entities (or back). Essential for pasting code samples into HTML. Runs entirely in your browser.</p>
+  <div class="card">
+    <label class="field-label" for="he-in">Input</label>
+    <textarea id="he-in" style="min-height:140px" placeholder="<div class=&quot;hello&quot;>Tom &amp; Jerry</div>"></textarea>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" onclick="enc()">Encode</button>
+      <button class="btn secondary" onclick="dec()">Decode</button>
+      <button class="btn secondary" onclick="swap()">Use result as input</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <label class="field-label">Result</label>
+    <div class="output-box" id="he-out" style="min-height:60px;white-space:pre-wrap">Result appears here.</div>
+    <div class="copy-hint">Encoding covers &amp; &lt; &gt; &quot; &#39; — decode supports named and numeric entities</div>
+  </div>
+  <div class="ad-slot"><div>Ad space — reserved</div></div>
+
+  <div class="support-box">
+    <p>Found this useful? Support DevToolbox:</p>
+    <a href="https://www.buymeacoffee.com/" target="_blank" rel="noopener"><button class="btn success">☕ Buy me a coffee</button></a>
+  </div>
+</main>
+<footer class="site-footer">
+  <div>© 2026 DevToolbox</div>
+  <div><a href="about.html">About</a><a href="privacy.html">Privacy Policy</a><a href="contact.html">Contact</a></div>
+</footer>
+<script>
+let last = "";
+function set(t) { last = t; document.getElementById("he-out").textContent = t || "(empty)"; }
+function enc() {
+  const s = document.getElementById("he-in").value;
+  set(s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"));
+}
+function dec() {
+  const s = document.getElementById("he-in").value;
+  const d = document.createElement("textarea");
+  d.innerHTML = s;
+  set(d.value);
+}
+function swap() { if (last) { document.getElementById("he-in").value = last; set(""); } }
+</script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="canonical" href="https://weather-source.github.io/dev-toolbox/case.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="DevToolbox">
+<meta property="og:title" content="Text Case Converter — UPPERCASE, lowercase, Title Case, camelCase, snake_case | DevToolbox">
+<meta property="og:description" content="Convert text between UPPERCASE, lowercase, Title Case, Sentence case, camelCase, PascalCase, snake_case and kebab-case. Free and private.">
+<meta property="og:url" content="https://weather-source.github.io/dev-toolbox/case.html">
+<meta name="twitter:card" content="summary">
+<title>Text Case Converter — UPPERCASE, lowercase, Title Case, camelCase, snake_case | DevToolbox</title>
+<meta name="description" content="Convert text between UPPERCASE, lowercase, Title Case, Sentence case, camelCase, PascalCase, snake_case and kebab-case. Free and private.">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="manifest" href="site.webmanifest">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="logo" href="./index.html">Dev<span>Toolbox</span></a>
+  <nav class="main-nav">
+    <a href="cron.html">Cron</a><a href="regex.html">Regex</a><a href="jwt.html">JWT</a>
+    <a href="timestamp.html">Timestamp</a><a href="password.html">Password</a>
+    <a href="image-compressor.html">Image Compress</a><a href="color.html">Color</a>
+    <a href="qrcode.html">QR Code</a><a href="json.html">JSON</a>
+    <a href="base64.html">Base64</a><a href="uuid.html">UUID</a><a href="url-encode.html">URL Encode</a>
+    <a href="diff.html">Diff</a><a href="hash.html">Hash</a><a href="case.html">Case</a>
+    <a href="html-entities.html">HTML Entities</a><a href="markdown.html">Markdown</a><a href="csv-json.html">CSV/JSON</a>
+  </nav>
+</header>
+<main>
+  <h1>Text Case Converter</h1>
+  <p class="page-desc">Paste text and convert it to any case: upper, lower, title, sentence, camel, pascal, snake, kebab or alternating. Runs entirely in your browser.</p>
+  <div class="card">
+    <label class="field-label" for="case-in">Input text</label>
+    <textarea id="case-in" style="min-height:140px" placeholder="the quick brown fox…"></textarea>
+    <div class="row" style="margin-top:12px;flex-wrap:wrap">
+      <button class="btn" onclick="conv('upper')">UPPER</button>
+      <button class="btn" onclick="conv('lower')">lower</button>
+      <button class="btn" onclick="conv('title')">Title Case</button>
+      <button class="btn" onclick="conv('sentence')">Sentence case</button>
+      <button class="btn secondary" onclick="conv('camel')">camelCase</button>
+      <button class="btn secondary" onclick="conv('pascal')">PascalCase</button>
+      <button class="btn secondary" onclick="conv('snake')">snake_case</button>
+      <button class="btn secondary" onclick="conv('kebab')">kebab-case</button>
+      <button class="btn secondary" onclick="conv('alt')">aLtErNaTiNg</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <label class="field-label">Result</label>
+    <div class="output-box" id="case-out" style="min-height:60px;white-space:pre-wrap">Your converted text appears here.</div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn secondary" onclick="copyOut()">Copy result</button>
+    </div>
+  </div>
+  <div class="ad-slot"><div>Ad space — reserved</div></div>
+
+  <div class="support-box">
+    <p>Found this useful? Support DevToolbox:</p>
+    <a href="https://www.buymeacoffee.com/" target="_blank" rel="noopener"><button class="btn success">☕ Buy me a coffee</button></a>
+  </div>
+</main>
+<footer class="site-footer">
+  <div>© 2026 DevToolbox</div>
+  <div><a href="about.html">About</a><a href="privacy.html">Privacy Policy</a><a href="contact.html">Contact</a></div>
+</footer>
+<script>
+let lastOut = "";
+const words = s => s.replace(/([a-z])([A-Z])/g, "$1 $2").split(/[\s_\-.]+/).filter(Boolean);
+function conv(kind) {
+  const s = document.getElementById("case-in").value;
+  if (!s) { document.getElementById("case-out").textContent = "Paste some text first."; return; }
+  let r;
+  switch (kind) {
+    case "upper": r = s.toUpperCase(); break;
+    case "lower": r = s.toLowerCase(); break;
+    case "title": r = s.toLowerCase().replace(/\b\w/g, c => c.toUpperCase()); break;
+    case "sentence": r = s.toLowerCase().replace(/(^|[.!?]\s+)([a-z])/g, (m, p, c) => p + c.toUpperCase()); break;
+    case "camel": r = words(s).map((w, i) => i ? w[0].toUpperCase() + w.slice(1).toLowerCase() : w.toLowerCase()).join(""); break;
+    case "pascal": r = words(s).map(w => w[0].toUpperCase() + w.slice(1).toLowerCase()).join(""); break;
+    case "snake": r = words(s).map(w => w.toLowerCase()).join("_"); break;
+    case "kebab": r = words(s).map(w => w.toLowerCase()).join("-"); break;
+    case "alt": r = [...s].map((c, i) => i % 2 ? c.toUpperCase() : c.toLowerCase()).join(""); break;
+  }
+  lastOut = r;
+  document.getElementById("case-out").textContent = r;
+}
+function copyOut() { if (lastOut) navigator.clipboard.writeText(lastOut); }
+</script>
+</body>
+</html>

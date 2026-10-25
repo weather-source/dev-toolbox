@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="canonical" href="https://weather-source.github.io/dev-toolbox/diff.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="DevToolbox">
+<meta property="og:title" content="Text Diff Checker — Compare Two Texts Line by Line | DevToolbox">
+<meta property="og:description" content="Compare two texts or code snippets line by line in your browser. Added, removed and unchanged lines, inline highlighting, nothing uploaded.">
+<meta property="og:url" content="https://weather-source.github.io/dev-toolbox/diff.html">
+<meta name="twitter:card" content="summary">
+<title>Text Diff Checker — Compare Two Texts Line by Line | DevToolbox</title>
+<meta name="description" content="Compare two texts or code snippets line by line in your browser. Added, removed and unchanged lines, inline highlighting, nothing uploaded.">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="manifest" href="site.webmanifest">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="logo" href="./index.html">Dev<span>Toolbox</span></a>
+  <nav class="main-nav">
+    <a href="cron.html">Cron</a><a href="regex.html">Regex</a><a href="jwt.html">JWT</a>
+    <a href="timestamp.html">Timestamp</a><a href="password.html">Password</a>
+    <a href="image-compressor.html">Image Compress</a><a href="color.html">Color</a>
+    <a href="qrcode.html">QR Code</a><a href="json.html">JSON</a>
+    <a href="base64.html">Base64</a><a href="uuid.html">UUID</a><a href="url-encode.html">URL Encode</a>
+    <a href="diff.html">Diff</a><a href="hash.html">Hash</a><a href="case.html">Case</a>
+    <a href="html-entities.html">HTML Entities</a><a href="markdown.html">Markdown</a><a href="csv-json.html">CSV/JSON</a>
+  </nav>
+</header>
+<main>
+  <h1>Text Diff Checker</h1>
+  <p class="page-desc">Paste two versions of a text or code snippet. Lines are compared with an LCS diff — added lines are green, removed lines red. Runs 100% in your browser.</p>
+  <div class="card">
+    <div class="row">
+      <div style="flex:1;min-width:240px">
+        <label class="field-label" for="diff-a">Original text</label>
+        <textarea id="diff-a" style="min-height:220px" placeholder="Original version…"></textarea>
+      </div>
+      <div style="flex:1;min-width:240px">
+        <label class="field-label" for="diff-b">Changed text</label>
+        <textarea id="diff-b" style="min-height:220px" placeholder="New version…"></textarea>
+      </div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" onclick="runDiff()">Compare</button>
+      <button class="btn secondary" onclick="swapTexts()">Swap</button>
+      <button class="btn secondary" onclick="clearAll()">Clear</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <label class="field-label">Diff result</label>
+    <div id="diff-out" class="output-box" style="min-height:100px;font-family:monospace;white-space:pre-wrap">Paste texts and press Compare.</div>
+    <div class="copy-hint" id="diff-status">—</div>
+  </div>
+  <div class="ad-slot"><div>Ad space — reserved</div></div>
+
+  <div class="support-box">
+    <p>Found this useful? Support DevToolbox:</p>
+    <a href="https://www.buymeacoffee.com/" target="_blank" rel="noopener"><button class="btn success">☕ Buy me a coffee</button></a>
+  </div>
+</main>
+<footer class="site-footer">
+  <div>© 2026 DevToolbox</div>
+  <div><a href="about.html">About</a><a href="privacy.html">Privacy Policy</a><a href="contact.html">Contact</a></div>
+</footer>
+<script>
+function lcsDiff(a, b) {
+  const A = a.split("\n"), B = b.split("\n");
+  const n = A.length, m = B.length;
+  const dp = Array.from({length: n + 1}, () => new Uint32Array(m + 1));
+  for (let i = n - 1; i >= 0; i--)
+    for (let j = m - 1; j >= 0; j--)
+      dp[i][j] = A[i] === B[j] ? dp[i+1][j+1] + 1 : Math.max(dp[i+1][j], dp[i][j+1]);
+  const out = [];
+  let i = 0, j = 0;
+  while (i < n && j < m) {
+    if (A[i] === B[j]) { out.push({t: " ", s: A[i]}); i++; j++; }
+    else if (dp[i+1][j] >= dp[i][j+1]) { out.push({t: "-", s: A[i]}); i++; }
+    else { out.push({t: "+", s: B[j]}); j++; }
+  }
+  while (i < n) out.push({t: "-", s: A[i++]});
+  while (j < m) out.push({t: "+", s: B[j++]});
+  return out;
+}
+function esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+function runDiff() {
+  const a = document.getElementById("diff-a").value;
+  const b = document.getElementById("diff-b").value;
+  if (!a && !b) { document.getElementById("diff-out").innerHTML = "Paste texts and press Compare."; return; }
+  const d = lcsDiff(a, b);
+  const html = d.map(l =>
+    l.t === " " ? '<span style="opacity:.55">' + esc(l.t + " " + l.s) + "</span>"
+    : l.t === "-" ? '<span style="background:rgba(255,80,80,.22);color:#ff9c9c">' + esc("- " + l.s) + "</span>"
+    : '<span style="background:rgba(80,255,140,.18);color:#8dffab">' + esc("+ " + l.s) + "</span>"
+  ).join("\n");
+  const out = document.getElementById("diff-out");
+  out.innerHTML = html || '<span style="opacity:.6">Both texts are empty.</span>';
+  const add = d.filter(l => l.t === "+").length, del = d.filter(l => l.t === "-").length, same = d.filter(l => l.t === " ").length;
+  document.getElementById("diff-status").textContent = add + " added · " + del + " removed · " + same + " unchanged";
+}
+function swapTexts() {
+  const a = document.getElementById("diff-a"), b = document.getElementById("diff-b");
+  [a.value, b.value] = [b.value, a.value];
+  if (a.value || b.value) runDiff();
+}
+function clearAll() { document.getElementById("diff-a").value = ""; document.getElementById("diff-b").value = ""; runDiff(); }
+</script>
+</body>
+</html>

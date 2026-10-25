@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="canonical" href="https://weather-source.github.io/dev-toolbox/csv-json.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="DevToolbox">
+<meta property="og:title" content="CSV to JSON Converter — And JSON to CSV | DevToolbox">
+<meta property="og:description" content="Convert CSV to JSON and JSON to CSV in your browser. Custom delimiter, header row detection, array-of-objects output. Free and private.">
+<meta property="og:url" content="https://weather-source.github.io/dev-toolbox/csv-json.html">
+<meta name="twitter:card" content="summary">
+<title>CSV to JSON Converter — And JSON to CSV | DevToolbox</title>
+<meta name="description" content="Convert CSV to JSON and JSON to CSV in your browser. Custom delimiter, header row detection, array-of-objects output. Free and private.">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="manifest" href="site.webmanifest">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="logo" href="./index.html">Dev<span>Toolbox</span></a>
+  <nav class="main-nav">
+    <a href="cron.html">Cron</a><a href="regex.html">Regex</a><a href="jwt.html">JWT</a>
+    <a href="timestamp.html">Timestamp</a><a href="password.html">Password</a>
+    <a href="image-compressor.html">Image Compress</a><a href="color.html">Color</a>
+    <a href="qrcode.html">QR Code</a><a href="json.html">JSON</a>
+    <a href="base64.html">Base64</a><a href="uuid.html">UUID</a><a href="url-encode.html">URL Encode</a>
+    <a href="diff.html">Diff</a><a href="hash.html">Hash</a><a href="case.html">Case</a>
+    <a href="html-entities.html">HTML Entities</a><a href="markdown.html">Markdown</a><a href="csv-json.html">CSV/JSON</a>
+  </nav>
+</header>
+<main>
+  <h1>CSV ⇄ JSON Converter</h1>
+  <p class="page-desc">Paste CSV to get JSON (array of objects, using the first row as keys), or paste JSON to get CSV. Choose the delimiter. Everything runs locally.</p>
+  <div class="card">
+    <label class="field-label" for="cj-in">Input</label>
+    <textarea id="cj-in" style="min-height:180px" placeholder="name,age,city&#10;Ada,36,London&#10;Alan,41,London"></textarea>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" onclick="csv2json()">CSV → JSON</button>
+      <button class="btn" onclick="json2csv()">JSON → CSV</button>
+      <label style="display:flex;align-items:center;gap:6px">Delimiter
+        <select id="cj-delim"><option value=",">, comma</option><option value=";">; semicolon</option><option value="\t">tab</option></select>
+      </label>
+      <button class="btn secondary" onclick="copyOut()">Copy result</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <label class="field-label">Result</label>
+    <div class="output-box" id="cj-out" style="min-height:80px;white-space:pre-wrap">Result appears here.</div>
+    <div class="copy-hint" id="cj-status">—</div>
+  </div>
+  <div class="ad-slot"><div>Ad space — reserved</div></div>
+
+  <div class="support-box">
+    <p>Found this useful? Support DevToolbox:</p>
+    <a href="https://www.buymeacoffee.com/" target="_blank" rel="noopener"><button class="btn success">☕ Buy me a coffee</button></a>
+  </div>
+</main>
+<footer class="site-footer">
+  <div>© 2026 DevToolbox</div>
+  <div><a href="about.html">About</a><a href="privacy.html">Privacy Policy</a><a href="contact.html">Contact</a></div>
+</footer>
+<script>
+let lastOut = "";
+function setOut(t, ok) { const o = document.getElementById("cj-out"); o.textContent = t; o.className = "output-box" + (ok ? " ok" : " err"); }
+function delim() { const v = document.getElementById("cj-delim").value; return v === "\\t" ? "\t" : v; }
+function parseCsv(text, d) {
+  const rows = []; let row = [], field = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) {
+      if (c === '"' && text[i+1] === '"') { field += '"'; i++; }
+      else if (c === '"') q = false;
+      else field += c;
+    } else if (c === '"') q = true;
+    else if (c === d) { row.push(field); field = ""; }
+    else if (c === "\n") { row.push(field); rows.push(row); row = []; field = ""; }
+    else if (c !== "\r") field += c;
+  }
+  if (field || row.length) { row.push(field); rows.push(row); }
+  return rows.filter(r => r.length > 1 || r[0] !== "");
+}
+function csv2json() {
+  const d = delim();
+  const rows = parseCsv(document.getElementById("cj-in").value.trim(), d);
+  if (!rows.length) { setOut("Paste some CSV first.", false); return; }
+  const head = rows[0];
+  const objs = rows.slice(1).map(r => Object.fromEntries(head.map((h, i) => [h, r[i] ?? ""])));
+  lastOut = JSON.stringify(objs, null, 2);
+  setOut(lastOut, true);
+  document.getElementById("cj-status").textContent = objs.length + " records, " + head.length + " columns";
+}
+function json2csv() {
+  let data;
+  try { data = JSON.parse(document.getElementById("cj-in").value); }
+  catch (e) { setOut("Invalid JSON: " + e.message, false); return; }
+  if (!Array.isArray(data) || !data.length || typeof data[0] !== "object") { setOut("Expected a JSON array of objects, e.g. [{\"name\":\"Ada\"}]", false); return; }
+  const d = delim();
+  const head = [...new Set(data.flatMap(o => Object.keys(o)))];
+  const q = v => { const s = v == null ? "" : String(v); return /[",\n\r]/.test(s) || s.includes(d) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  lastOut = [head.map(q).join(d), ...data.map(o => head.map(h => q(o[h])).join(d))].join("\n");
+  setOut(lastOut, true);
+  document.getElementById("cj-status").textContent = data.length + " records, " + head.length + " columns";
+}
+function copyOut() { if (lastOut) navigator.clipboard.writeText(lastOut); }
+</script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+{"name": "DevToolbox", "short_name": "DevToolbox", "description": "Free online developer tools \u2014 fast, private, browser-based.", "start_url": "./index.html", "display": "standalone", "background_color": "#0e1512", "theme_color": "#16241d", "icons": [{"src": "favicon.svg", "sizes": "any", "type": "image/svg+xml"}]}
